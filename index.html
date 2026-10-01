@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Periscope Mission</title>
+<style>
+  :root{
+    --bg:#0b1d2e; --panel:#12304a; --panel2:#173b5a; --ink:#eaf4ff; --muted:#9dbad3;
+    --accent:#ffcc33; --ray:#ff4d4d; --ok:#3ddc84; --bad:#ff6b6b; --line:#2b5577;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.45}
+  header{padding:16px;text-align:center;background:linear-gradient(180deg,#0f2a44,#0b1d2e)}
+  header h1{margin:0;font-size:clamp(1.4rem,3.5vw,2.1rem);letter-spacing:.5px}
+  header p{margin:6px 0 0;color:var(--muted)}
+  main{max-width:1180px;margin:0 auto;padding:12px 16px 40px}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
+  @media (max-width:900px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .card h2{margin:0 0 8px;font-size:1.05rem;color:var(--accent)}
+  canvas{display:block;width:100%;height:auto;border-radius:10px}
+  #scene{background:#0e2740}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .tabs button{flex:1;min-width:110px}
+  button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:9px;padding:8px 10px}
+  button:hover{border-color:var(--accent)}
+  button.active{background:var(--accent);color:#1b1b1b;border-color:var(--accent);font-weight:700}
+  .ctrl{margin:10px 0}
+  .ctrl label{display:flex;justify-content:space-between;font-weight:600}
+  .ctrl .row{display:flex;gap:6px;align-items:center;margin-top:4px}
+  .ctrl input[type=range]{flex:1;accent-color:var(--accent)}
+  .ctrl .row button{padding:4px 10px}
+  .val{color:var(--accent);font-variant-numeric:tabular-nums}
+  .status{margin-top:10px;padding:10px;border-radius:10px;font-weight:700;text-align:center}
+  .status.ok{background:rgba(61,220,132,.15);color:var(--ok);border:1px solid var(--ok)}
+  .status.part{background:rgba(255,204,51,.12);color:var(--accent);border:1px solid var(--accent)}
+  .status.bad{background:rgba(255,107,107,.12);color:var(--bad);border:1px solid var(--bad)}
+  .checks{display:flex;flex-direction:column;gap:4px;margin-top:8px;font-size:.95rem}
+  .brief{color:var(--muted);font-size:.95rem;margin:0 0 6px}
+  .stars{font-size:1.1rem;letter-spacing:2px;color:var(--accent)}
+  .learn{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:16px}
+  .learn ul{margin:0;padding-left:18px}
+  .q{margin:12px 0;padding:10px;border-radius:10px;background:var(--panel2)}
+  .q p{margin:0 0 6px;font-weight:600}
+  .q .opts{display:flex;flex-direction:column;gap:6px}
+  .q .opts button{text-align:left}
+  .q .opts button.right{background:rgba(61,220,132,.2);border-color:var(--ok)}
+  .q .opts button.wrong{background:rgba(255,107,107,.2);border-color:var(--bad)}
+  .fb{margin-top:6px;font-size:.92rem;color:var(--muted)}
+  #score{font-weight:700;color:var(--accent)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:8px}
+  .legend span::before{content:"";display:inline-block;width:18px;height:3px;margin-right:6px;vertical-align:middle;background:var(--c)}
+  .predict[hidden]{display:none}
+  .predict{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .predict input{width:80px;font:inherit;padding:6px;border-radius:8px;border:1px solid var(--line);background:#0e2740;color:var(--ink)}
+  footer{text-align:center;color:var(--muted);font-size:.85rem;padding:10px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Periscope Mission</h1>
+  <p>Submarine <b>UAE Explorer</b> is under the Arabian Gulf. Adjust the mirrors so the crew can spot the dhow on the surface.</p>
+</header>
+<main>
+  <div class="tabs" id="tabs">
+    <button data-m="1" class="active">Mission 1: Fix it</button>
+    <button data-m="2">Mission 2: Blind test</button>
+    <button data-m="3">Mission 3: Predict</button>
+    <button data-m="0">Free explore</button>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <canvas id="scene" width="900" height="560" aria-label="Periscope ray diagram"></canvas>
+      <div class="legend">
+        <span style="--c:#ff4d4d">Light ray</span>
+        <span style="--c:#ffffff">Normal (dashed)</span>
+        <span style="--c:#bfe6ff">Plane mirror</span>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h2 id="mTitle">Mission 1</h2>
+        <p class="brief" id="mBrief"></p>
+        <div class="ctrl">
+          <label>Top mirror angle <span class="val" id="v1"></span></label>
+          <div class="row"><button data-s="a1" data-d="-1">−</button><input type="range" id="a1" min="10" max="80" step="1"><button data-s="a1" data-d="1">+</button></div>
+        </div>
+        <div class="ctrl">
+          <label>Bottom mirror angle <span class="val" id="v2"></span></label>
+          <div class="row"><button data-s="a2" data-d="-1">−</button><input type="range" id="a2" min="10" max="80" step="1"><button data-s="a2" data-d="1">+</button></div>
+        </div>
+        <div id="predictBox" class="predict" hidden>
+          <span>Angle of reflection r =</span><input id="pIn" type="number" min="0" max="90"><span>°</span>
+          <button id="pBtn">Check</button>
+        </div>
+        <div class="checks">
+          <label><input type="checkbox" id="showN" checked> Show normals</label>
+          <label><input type="checkbox" id="showA" checked> Show angle values</label>
+        </div>
+        <div id="status" class="status bad">Only darkness...</div>
+        <button id="newBtn" style="width:100%;margin-top:8px">New mission start</button>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h2>What the crew sees</h2>
+        <canvas id="view" width="300" height="170"></canvas>
+        <p class="brief" style="margin-top:6px">Missions completed: <span class="stars" id="stars">☆☆☆</span></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="learn">
+    <div class="card">
+      <h2>Learning objectives</h2>
+      <ul>
+        <li>State the law of reflection: angle of incidence = angle of reflection.</li>
+        <li>Measure angles from the <b>normal</b> (a line at 90° to the mirror).</li>
+        <li>Explain why periscope mirrors are set at 45° and parallel.</li>
+        <li>Describe the image seen through a periscope.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Key vocabulary</h2>
+      <ul>
+        <li><b>Incident ray</b> – the light ray arriving at the mirror.</li>
+        <li><b>Reflected ray</b> – the light ray leaving the mirror.</li>
+        <li><b>Normal</b> – imaginary line at 90° to the mirror surface.</li>
+        <li><b>Angle of incidence (i)</b> – between incident ray and normal.</li>
+        <li><b>Angle of reflection (r)</b> – between reflected ray and normal.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h2>Check your understanding <span id="score"></span></h2>
+    <div id="quiz"></div>
+  </div>
+</main>
+<footer>Periscope Mission · Light &amp; reflection simulation</footer>
+
+<script>
+(() => {
+const W = 900, H = 560;
+const cv = document.getElementById('scene'), ctx = cv.getContext('2d');
+const vc = document.getElementById('view'), vx = vc.getContext('2d');
+function fit(c, w, h, g){ const d = window.devicePixelRatio || 1; c.width = w*d; c.height = h*d; g.setTransform(d,0,0,d,0,0); }
+fit(cv, W, H, ctx); fit(vc, 300, 170, vx);
+
+// Geometry
+const TX = 200, TW = 70, TOP = 90, BOT = 470, OPEN = 70, SEA = 175;
+const C1 = {x: TX+TW/2, y: TOP+OPEN/2};
+const C2 = {x: TX+TW/2, y: BOT-OPEN/2};
+const EYE = {x: TX-55, y: BOT-OPEN/2, r: 14};
+const RAYS_Y = [C1.y-10, C1.y, C1.y+10];
+const RAY_X0 = 715;
+
+const walls = [
+  [TX,TOP, TX+TW,TOP], [TX,TOP, TX,BOT-OPEN], [TX+TW,TOP+OPEN, TX+TW,BOT], [TX,BOT, TX+TW,BOT],
+  [0,0, W,0],[0,H, W,H],[0,0, 0,H],[W,0, W,H]
+];
+
+const st = { m: 1, a1: 30, a2: 60, done: {1:false,2:false,3:false}, pAnswer: null, pOk: false };
+const $ = id => document.getElementById(id);
+
+function mirror(c, deg, front){
+  const t = deg*Math.PI/180, cs = Math.cos(t), sn = Math.sin(t);
+  const L = Math.min(92, (TW-6)/Math.max(cs,1e-6), (OPEN-4)/Math.max(sn,1e-6));
+  const dx = cs*L/2, dy = -sn*L/2;
+  const n = front > 0 ? {x: sn, y: cs} : {x: -sn, y: -cs};
+  return {a:{x:c.x-dx,y:c.y-dy}, b:{x:c.x+dx,y:c.y+dy}, n};
+}
+
+function hitSeg(p, d, a, b){
+  const ex = b.x-a.x, ey = b.y-a.y;
+  const den = d.x*ey - d.y*ex;
+  if (Math.abs(den) < 1e-9) return null;
+  const qx = a.x-p.x, qy = a.y-p.y;
+  const t = (qx*ey - qy*ex)/den, u = (qx*d.y - qy*d.x)/den;
+  return (t > 1e-6 && u >= 0 && u <= 1) ? t : null;
+}
+function hitCircle(p, d, c){
+  const fx = p.x-c.x, fy = p.y-c.y;
+  const b = fx*d.x + fy*d.y, cc = fx*fx + fy*fy - c.r*c.r;
+  const disc = b*b - cc; if (disc < 0) return null;
+  const t = -b - Math.sqrt(disc); return t > 1e-6 ? t : null;
+}
+
+function trace(y0, m1, m2){
+  let p = {x: RAY_X0, y: y0}, d = {x:-1, y:0};
+  const pts = [{...p}], hits = [];
+  for (let k = 0; k < 8; k++){
+    let best = Infinity, kind = null, mir = null;
+    for (const w of walls){ const t = hitSeg(p, d, {x:w[0],y:w[1]}, {x:w[2],y:w[3]}); if (t !== null && t < best){best = t; kind = 'wall';} }
+    for (const m of [m1, m2]){ const t = hitSeg(p, d, m.a, m.b); if (t !== null && t < best){best = t; kind = 'mirror'; mir = m;} }
+    const te = hitCircle(p, d, EYE); if (te !== null && te < best){best = te; kind = 'eye';}
+    if (!isFinite(best)) break;
+    p = {x: p.x + d.x*best, y: p.y + d.y*best}; pts.push({...p});
+    if (kind === 'mirror'){
+      const dn = d.x*mir.n.x + d.y*mir.n.y;
+      if (dn >= 0) return {pts, hits, eye:false}; // back of mirror (painted)
+      const i = Math.acos(Math.min(1, -dn))*180/Math.PI;
+      const nd = {x: d.x - 2*dn*mir.n.x, y: d.y - 2*dn*mir.n.y};
+      const r = Math.acos(Math.min(1, nd.x*mir.n.x + nd.y*mir.n.y))*180/Math.PI;
+      hits.push({p:{...p}, n:mir.n, i, r, din:d, dout:nd});
+      d = nd;
+    } else return {pts, hits, eye: kind === 'eye'};
+  }
+  return {pts, hits, eye:false};
+}
+
+// Drawing helpers
+function drawDhow(g, x, y, s){
+  g.save(); g.translate(x, y); g.scale(s, s);
+  g.fillStyle = '#8b5a2b';
+  g.beginPath(); g.moveTo(-70,0); g.lineTo(80,0); g.lineTo(60,22); g.lineTo(-55,22); g.closePath(); g.fill();
+  g.fillStyle = '#6e4420'; g.fillRect(-55,6,115,4);
+  g.strokeStyle = '#4a2f14'; g.lineWidth = 3; g.beginPath(); g.moveTo(5,0); g.lineTo(5,-95); g.stroke();
+  g.fillStyle = '#f4ead2'; g.beginPath(); g.moveTo(7,-90); g.quadraticCurveTo(60,-55,62,-8); g.lineTo(7,-8); g.closePath(); g.fill();
+  g.fillStyle = '#e8dcc0'; g.beginPath(); g.moveTo(3,-80); g.quadraticCurveTo(-35,-45,-45,-8); g.lineTo(3,-8); g.closePath(); g.fill();
+  g.fillStyle = '#c8102e'; g.fillRect(5,-102,16,4); g.fillStyle='#00732f'; g.fillRect(5,-98,16,4); g.fillStyle='#fff'; g.fillRect(5,-94,16,4); g.fillStyle='#000'; g.fillRect(5,-90,16,4); g.fillStyle='#c8102e'; g.fillRect(1,-102,5,16);
+  g.restore();
+}
+
+function drawScene(res, m1, m2){
+  const g = ctx;
+  // sky & sea
+  let gr = g.createLinearGradient(0,0,0,SEA); gr.addColorStop(0,'#5fb4ea'); gr.addColorStop(1,'#bfe4fb');
+  g.fillStyle = gr; g.fillRect(0,0,W,SEA);
+  gr = g.createLinearGradient(0,SEA,0,H); gr.addColorStop(0,'#1c6ea4'); gr.addColorStop(1,'#06243d');
+  g.fillStyle = gr; g.fillRect(0,SEA,W,H-SEA);
+  g.fillStyle = '#ffe48a'; g.beginPath(); g.arc(860,40,22,0,7); g.fill();
+  g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 2;
+  for (let x = 0; x < W; x += 40){ g.beginPath(); g.arc(x+20, SEA, 20, Math.PI*1.15, Math.PI*1.85); g.stroke(); }
+  drawDhow(g, 770, SEA-18, 1);
+  g.fillStyle = '#fff'; g.font = '600 13px system-ui'; g.fillText('Dhow (object)', 728, SEA+22);
+
+  // submarine
+  g.fillStyle = '#4b5d6b';
+  g.beginPath(); g.ellipse(250, 505, 230, 58, 0, 0, Math.PI*2); g.fill();
+  g.fillStyle = '#3a4a56'; g.fillRect(TX-30, BOT-95, TW+60, 60);
+  g.fillStyle = '#d8e3ea'; g.font = '700 14px system-ui'; g.fillText('UAE EXPLORER', 300, 525);
+  // inside cabin
+  g.fillStyle = '#20313d'; g.fillRect(TX-110, BOT-OPEN, 110, OPEN);
+
+  // tube
+  g.fillStyle = 'rgba(30,40,48,.55)'; g.fillRect(TX, TOP, TW, BOT-TOP);
+  g.strokeStyle = '#1b2329'; g.lineWidth = 6; g.lineCap = 'square';
+  for (const w of walls.slice(0,4)){ g.beginPath(); g.moveTo(w[0],w[1]); g.lineTo(w[2],w[3]); g.stroke(); }
+  g.fillStyle = '#cfe0ea'; g.font = '600 12px system-ui';
+  g.fillText('Periscope tube', TX+TW+10, 300);
+
+  // mirrors with painted back
+  for (const m of [m1, m2]){
+    g.lineCap = 'round';
+    g.strokeStyle = '#55616a'; g.lineWidth = 7;
+    g.beginPath(); g.moveTo(m.a.x - m.n.x*3, m.a.y - m.n.y*3); g.lineTo(m.b.x - m.n.x*3, m.b.y - m.n.y*3); g.stroke();
+    g.strokeStyle = '#bfe6ff'; g.lineWidth = 4;
+    g.beginPath(); g.moveTo(m.a.x, m.a.y); g.lineTo(m.b.x, m.b.y); g.stroke();
+  }
+
+  // eye
+  g.save(); g.translate(EYE.x, EYE.y);
+  g.fillStyle = '#f6d7b8'; g.beginPath(); g.arc(-18, 0, 26, 0, 7); g.fill();
+  g.fillStyle = '#fff'; g.beginPath(); g.ellipse(0,0,13,8,0,0,7); g.fill();
+  g.fillStyle = res.ok ? '#2f9e44' : '#3d2b1f'; g.beginPath(); g.arc(4,0,5,0,7); g.fill();
+  g.restore();
+  g.fillStyle = '#fff'; g.font = '600 12px system-ui'; g.fillText('Eye', EYE.x-36, EYE.y+40);
+
+  // rays
+  for (const r of res.rays){
+    g.strokeStyle = r.eye ? '#ff4d4d' : 'rgba(255,77,77,.6)'; g.lineWidth = r.center ? 3 : 1.6;
+    g.beginPath(); g.moveTo(r.pts[0].x, r.pts[0].y);
+    for (const q of r.pts.slice(1)) g.lineTo(q.x, q.y);
+    g.stroke();
+    // arrowheads at midpoints
+    for (let k = 0; k < r.pts.length-1; k++){
+      const a = r.pts[k], b = r.pts[k+1], len = Math.hypot(b.x-a.x, b.y-a.y); if (len < 30) continue;
+      const mx = (a.x+b.x)/2, my = (a.y+b.y)/2, ux = (b.x-a.x)/len, uy = (b.y-a.y)/len;
+      g.fillStyle = g.strokeStyle; g.beginPath();
+      g.moveTo(mx+ux*7, my+uy*7); g.lineTo(mx-ux*5-uy*5, my-uy*5+ux*5); g.lineTo(mx-ux*5+uy*5, my-uy*5-ux*5); g.closePath(); g.fill();
+    }
+  }
+
+  // normals + angles on central ray
+  const c = res.rays[1];
+  const showN = $('showN').checked, showA = $('showA').checked && st.m !== 2;
+  c.hits.forEach((h, idx) => {
+    if (showN){
+      g.setLineDash([6,5]); g.strokeStyle = '#fff'; g.lineWidth = 1.5;
+      g.beginPath(); g.moveTo(h.p.x - h.n.x*10, h.p.y - h.n.y*10); g.lineTo(h.p.x + h.n.x*55, h.p.y + h.n.y*55); g.stroke();
+      g.setLineDash([]);
+    }
+    if (showA){
+      const bx = idx === 0 ? TX+TW+48 : TX-190, by = idx === 0 ? TOP+OPEN+20 : BOT-OPEN-60;
+      g.fillStyle = 'rgba(8,24,38,.85)'; g.fillRect(bx, by, 140, 46);
+      g.strokeStyle = '#ffcc33'; g.lineWidth = 1; g.strokeRect(bx, by, 140, 46);
+      g.fillStyle = '#ffcc33'; g.font = '700 13px system-ui';
+      g.fillText((idx===0?'Top':'Bottom')+' mirror', bx+8, by+17);
+      g.fillStyle = '#fff'; g.font = '600 13px system-ui';
+      const iv = h.i.toFixed(0)+'°';
+      const rv = (st.m === 3 && idx === 0 && !st.pOk) ? '?' : h.r.toFixed(0)+'°';
+      g.fillText('i = '+iv+'   r = '+rv, bx+8, by+36);
+    }
+  });
+}
+
+function drawView(n){
+  const g = vx, w = 300, h = 170;
+  g.clearRect(0,0,w,h);
+  g.save(); g.beginPath(); g.arc(w/2, h/2, 80, 0, 7); g.clip();
+  if (n === 0){
+    g.fillStyle = '#050505'; g.fillRect(0,0,w,h);
+    g.fillStyle = '#555'; g.font = '600 14px system-ui'; g.textAlign = 'center';
+    g.fillText('Darkness', w/2, h/2+5);
+  } else {
+    let gr = g.createLinearGradient(0,0,0,h); gr.addColorStop(0,'#5fb4ea'); gr.addColorStop(.62,'#bfe4fb'); gr.addColorStop(.62,'#1c6ea4'); gr.addColorStop(1,'#0b3a5e');
+    g.fillStyle = gr; g.fillRect(0,0,w,h);
+    drawDhow(g, w/2, h*.62-10, .9);
+    if (n < 3){ g.fillStyle = 'rgba(0,0,0,'+(n===1?.65:.4)+')'; g.fillRect(0,0,w,h); }
+  }
+  g.restore();
+  g.strokeStyle = '#111'; g.lineWidth = 8; g.beginPath(); g.arc(w/2, h/2, 82, 0, 7); g.stroke();
+  g.strokeStyle = 'rgba(255,255,255,.25)'; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(w/2-80,h/2); g.lineTo(w/2+80,h/2); g.moveTo(w/2,h/2-80); g.lineTo(w/2,h/2+80); g.stroke();
+}
+
+const MISSIONS = {
+  0: {t:'Free explore', b:'Change both mirrors and watch the light ray. What happens at each mirror? Compare i and r.'},
+  1: {t:'Mission 1: Fix the periscope', b:'The mirrors were knocked out of place. Use the sliders so that light from the dhow reaches the eye.'},
+  2: {t:'Mission 2: Blind test', b:'The angle readouts are broken! Use only the ray diagram to line the mirrors up. Then reveal the angles.'},
+  3: {t:'Mission 3: Predict', b:'The bottom mirror is set. Look at the angle of incidence (i) on the top mirror and predict the angle of reflection (r).'}
+};
+
+function update(){
+  st.a1 = +$('a1').value; st.a2 = +$('a2').value;
+  const hide = st.m === 2;
+  $('v1').textContent = hide ? '??°' : st.a1+'°';
+  $('v2').textContent = hide ? '??°' : st.a2+'°';
+  const m1 = mirror(C1, st.a1, 1), m2 = mirror(C2, st.a2, -1);
+  const rays = RAYS_Y.map((y,k) => ({...trace(y, m1, m2), center: k===1}));
+  const n = rays.filter(r => r.eye).length;
+  const res = {rays, ok: n === 3};
+  ctx.clearRect(0,0,W,H);
+  drawScene(res, m1, m2); drawView(n);
+  const s = $('status');
+  if (n === 3){ s.className = 'status ok'; s.textContent = 'Target in view! The dhow is clear.'; }
+  else if (n > 0){ s.className = 'status part'; s.textContent = 'Almost! Part of the image is reaching the eye.'; }
+  else { s.className = 'status bad'; s.textContent = 'Only darkness... the light misses the eye.'; }
+  if (n === 3 && (st.m === 1 || st.m === 2) && !st.done[st.m]){
+    st.done[st.m] = true;
+    s.textContent = st.m === 2 ? 'Mission 2 complete! Angles: '+st.a1+'° and '+st.a2+'°.' : 'Mission 1 complete! Both mirrors at '+st.a1+'° and '+st.a2+'°.';
+  }
+  if (st.m === 3){
+    if (st.pOk) { s.className = 'status ok'; s.textContent = 'Correct! r = i. Mission 3 complete.'; }
+  }
+  $('stars').textContent = [1,2,3].map(k => st.done[k] ? '★' : '☆').join('');
+  st.lastI = rays[1].hits[0] ? rays[1].hits[0].i : null;
+}
+
+function rnd(){ let v; do { v = 15 + Math.floor(Math.random()*61); } while (Math.abs(v-45) < 8); return v; }
+
+function setMission(m){
+  st.m = m; st.pOk = false;
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', +b.dataset.m === m));
+  $('mTitle').textContent = MISSIONS[m].t; $('mBrief').textContent = MISSIONS[m].b;
+  $('predictBox').hidden = m !== 3;
+  $('a1').disabled = m === 3; $('a2').disabled = m === 3;
+  document.querySelectorAll('[data-s]').forEach(b => b.disabled = m === 3);
+  $('showA').parentElement.style.display = m === 2 ? 'none' : '';
+  if (m === 3){ $('a1').value = 20 + Math.floor(Math.random()*50); $('a2').value = 45; $('pIn').value = ''; }
+  else if (m === 0){ $('a1').value = 45; $('a2').value = 45; }
+  else { $('a1').value = rnd(); $('a2').value = rnd(); }
+  update();
+}
+
+$('a1').addEventListener('input', update); $('a2').addEventListener('input', update);
+$('showN').addEventListener('change', update); $('showA').addEventListener('change', update);
+document.querySelectorAll('[data-s]').forEach(b => b.addEventListener('click', () => {
+  const el = $(b.dataset.s); el.value = Math.max(+el.min, Math.min(+el.max, +el.value + +b.dataset.d)); update();
+}));
+document.querySelectorAll('#tabs button').forEach(b => b.addEventListener('click', () => setMission(+b.dataset.m)));
+$('newBtn').addEventListener('click', () => setMission(st.m));
+$('pBtn').addEventListener('click', () => {
+  const v = parseFloat($('pIn').value), i = Math.round(st.lastI);
+  const s = $('status');
+  if (isNaN(v)){ s.className='status part'; s.textContent='Type your prediction first.'; return; }
+  if (Math.abs(v - i) <= 1){ st.pOk = true; st.done[3] = true; update(); }
+  else { s.className='status bad'; s.textContent='Not quite. Remember the law of reflection: r = i. Try again.'; }
+});
+
+// Quiz
+const QUIZ = [
+  {q:'At what angle to the tube are the mirrors in a periscope placed?', o:['30°','45°','60°','90°'], a:1, e:'At 45°, each mirror turns the light through 90°.'},
+  {q:'The law of reflection says...', o:['angle of incidence = angle of reflection','angle of incidence is always 90°','light bends when it reflects','reflected angle is double the incident angle'], a:0, e:'i = r for every plane mirror.'},
+  {q:'Angles of incidence and reflection are measured from...', o:['the mirror surface','the normal','the floor','the eye'], a:1, e:'The normal is the line at 90° to the mirror.'},
+  {q:'A ray hits a mirror with i = 45°. What is the angle between the incident and reflected ray?', o:['45°','90°','135°','180°'], a:1, e:'i + r = 45° + 45° = 90°, so the light turns a corner.'},
+  {q:'The image seen through a simple two-mirror periscope is...', o:['upside down','upright and the same way round as the object','upright but laterally inverted','not visible'], a:1, e:'Two reflections cancel out the left–right swap, so the image is upright and the right way round.'},
+  {q:'Why do submarines use periscopes?', o:['To make objects bigger','To see above the water while staying hidden','To make light travel faster','To bend light round the Earth'], a:1, e:'The periscope lets the crew look over the surface without surfacing.'}
+];
+let score = 0, answered = 0;
+const qz = $('quiz');
+QUIZ.forEach((item, qi) => {
+  const d = document.createElement('div'); d.className = 'q';
+  d.innerHTML = '<p>'+(qi+1)+'. '+item.q+'</p><div class="opts"></div><div class="fb"></div>';
+  const opts = d.querySelector('.opts');
+  item.o.forEach((t, oi) => {
+    const b = document.createElement('button'); b.textContent = t;
+    b.addEventListener('click', () => {
+      if (d.dataset.done) return; d.dataset.done = 1; answered++;
+      if (oi === item.a){ b.classList.add('right'); score++; d.querySelector('.fb').textContent = 'Correct! ' + item.e; }
+      else { b.classList.add('wrong'); opts.children[item.a].classList.add('right'); d.querySelector('.fb').textContent = 'Not quite. ' + item.e; }
+      $('score').textContent = '— ' + score + ' / ' + QUIZ.length + (answered === QUIZ.length ? ' (done)' : '');
+    });
+    opts.appendChild(b);
+  });
+  qz.appendChild(d);
+});
+
+setMission(1);
+})();
+</script>
+</body>
+</html>
