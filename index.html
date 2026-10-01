@@ -1,423 +1,909 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Periscope Mission</title>
+<title>Periscope Mission – Year 6 Physics Simulation</title>
 <style>
-  :root{
-    --bg:#0b1d2e; --panel:#12304a; --panel2:#173b5a; --ink:#eaf4ff; --muted:#9dbad3;
-    --accent:#ffcc33; --ray:#ff4d4d; --ok:#3ddc84; --bad:#ff6b6b; --line:#2b5577;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.45}
-  header{padding:16px;text-align:center;background:linear-gradient(180deg,#0f2a44,#0b1d2e)}
-  header h1{margin:0;font-size:clamp(1.4rem,3.5vw,2.1rem);letter-spacing:.5px}
-  header p{margin:6px 0 0;color:var(--muted)}
-  main{max-width:1180px;margin:0 auto;padding:12px 16px 40px}
-  .grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
-  @media (max-width:900px){.grid{grid-template-columns:1fr}}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
-  .card h2{margin:0 0 8px;font-size:1.05rem;color:var(--accent)}
-  canvas{display:block;width:100%;height:auto;border-radius:10px}
-  #scene{background:#0e2740}
-  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-  .tabs button{flex:1;min-width:110px}
-  button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:9px;padding:8px 10px}
-  button:hover{border-color:var(--accent)}
-  button.active{background:var(--accent);color:#1b1b1b;border-color:var(--accent);font-weight:700}
-  .ctrl{margin:10px 0}
-  .ctrl label{display:flex;justify-content:space-between;font-weight:600}
-  .ctrl .row{display:flex;gap:6px;align-items:center;margin-top:4px}
-  .ctrl input[type=range]{flex:1;accent-color:var(--accent)}
-  .ctrl .row button{padding:4px 10px}
-  .val{color:var(--accent);font-variant-numeric:tabular-nums}
-  .status{margin-top:10px;padding:10px;border-radius:10px;font-weight:700;text-align:center}
-  .status.ok{background:rgba(61,220,132,.15);color:var(--ok);border:1px solid var(--ok)}
-  .status.part{background:rgba(255,204,51,.12);color:var(--accent);border:1px solid var(--accent)}
-  .status.bad{background:rgba(255,107,107,.12);color:var(--bad);border:1px solid var(--bad)}
-  .checks{display:flex;flex-direction:column;gap:4px;margin-top:8px;font-size:.95rem}
-  .brief{color:var(--muted);font-size:.95rem;margin:0 0 6px}
-  .stars{font-size:1.1rem;letter-spacing:2px;color:var(--accent)}
-  .learn{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:16px}
-  .learn ul{margin:0;padding-left:18px}
-  .q{margin:12px 0;padding:10px;border-radius:10px;background:var(--panel2)}
-  .q p{margin:0 0 6px;font-weight:600}
-  .q .opts{display:flex;flex-direction:column;gap:6px}
-  .q .opts button{text-align:left}
-  .q .opts button.right{background:rgba(61,220,132,.2);border-color:var(--ok)}
-  .q .opts button.wrong{background:rgba(255,107,107,.2);border-color:var(--bad)}
-  .fb{margin-top:6px;font-size:.92rem;color:var(--muted)}
-  #score{font-weight:700;color:var(--accent)}
-  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:8px}
-  .legend span::before{content:"";display:inline-block;width:18px;height:3px;margin-right:6px;vertical-align:middle;background:var(--c)}
-  .predict[hidden]{display:none}
-  .predict{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-  .predict input{width:80px;font:inherit;padding:6px;border-radius:8px;border:1px solid var(--line);background:#0e2740;color:var(--ink)}
-  footer{text-align:center;color:var(--muted);font-size:.85rem;padding:10px}
+:root{--bg:#f3f6fb;--card:#fff;--ink:#1d2433;--muted:#5b6475;--brand:#c62828;--accent:#1565c0;--ok:#2e7d32;--bad:#c62828;--warn:#e67e00;--line:#dde3ec}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45}
+svg text{font-family:"Segoe UI",system-ui,Roboto,Arial,sans-serif}
+header{background:#fff;border-bottom:4px solid var(--brand);padding:10px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:space-between;position:sticky;top:0;z-index:30}
+header h1{font-size:1.15rem;margin:0}
+header .sub{font-size:.8rem;color:var(--muted)}
+.toggles{display:flex;gap:6px;flex-wrap:wrap}
+.toggles button{border:1px solid var(--line);background:#f7f9fc;border-radius:99px;padding:6px 12px;font-size:.85rem;cursor:pointer}
+.toggles button.off{opacity:.55;text-decoration:line-through}
+#steps{display:flex;gap:4px;flex-wrap:wrap;padding:8px 16px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:62px;z-index:29}
+#steps span{font-size:.75rem;padding:4px 10px;border-radius:99px;background:#eef1f6;color:var(--muted)}
+#steps span.done{background:#e3f2e5;color:var(--ok)}
+#steps span.now{background:var(--brand);color:#fff;font-weight:600}
+main{max-width:1180px;margin:0 auto;padding:16px}
+.card{background:var(--card);border-radius:14px;box-shadow:0 2px 10px rgba(20,30,60,.07);padding:18px}
+.grid{display:grid;grid-template-columns:minmax(280px,1fr) minmax(300px,1fr);gap:16px;align-items:start}
+.grid.wide{grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr)}
+@media(max-width:820px){.grid,.grid.wide{grid-template-columns:1fr}}
+h2{margin:.1em 0 .4em;font-size:1.3rem;color:var(--brand)}
+h3{margin:.2em 0 .3em}
+.lead{color:var(--muted)}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:11px 18px;font-size:1rem;cursor:pointer;font-weight:600}
+.btn:disabled{background:#9fb3c8!important;color:#fff!important;cursor:not-allowed}
+.btn.green{background:var(--ok)}
+.btn.light{background:#eef3fa;color:var(--accent)}
+.btn.red{background:var(--bad)}
+.btn.on{background:#f9a825;color:#3a2a00}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+input[type=text]{padding:10px;border:1px solid var(--line);border-radius:8px;font-size:1rem;width:100%}
+label.f{display:block;font-weight:600;margin:10px 0 4px}
+#scopeCard{padding:8px;position:sticky;top:120px}
+#scope{width:100%;height:auto;max-height:calc(100vh - 150px);display:block;margin:auto;touch-action:none;border-radius:10px}
+#scope .part .real{opacity:0;transition:opacity .4s}
+#scope .part.placed .real{opacity:1}
+#scope .part.placed .ghost{display:none}
+#scope .ghost{fill:rgba(120,130,150,.07);stroke:#8a94a6;stroke-dasharray:5 4;stroke-width:1.5}
+#scope .part.glow .ghost{stroke:#ffb300;stroke-dasharray:none;animation:blink .5s 6 alternate}
+#scope .lab{display:none;font-size:12px;font-weight:600;fill:#263238}
+#scope .lab line{stroke:#546e7a;stroke-width:1}
+#scope .lab.on{display:block}
+#scope.nolabels .lab{display:none}
+#scope .mg.glow .ghost{display:block!important}
+@keyframes blink{from{stroke-width:1.5}to{stroke-width:6}}
+.tray{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:8px;margin:12px 0}
+.piece{background:#fafbfd;border:2px solid var(--line);border-radius:10px;padding:6px;text-align:center;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none;font-size:.82rem;font-weight:600}
+.piece:hover{border-color:#90caf9}
+.piece.sel{border-color:var(--accent);background:#e3f2fd}
+.piece .ico{width:100%;height:46px;display:block;margin-bottom:3px;pointer-events:none}
+.dragghost{position:fixed;pointer-events:none;z-index:100;transform:translate(-50%,-50%) scale(1.1);opacity:.92;box-shadow:0 6px 18px rgba(0,0,0,.25);width:105px}
+.msg{min-height:1.6em;font-weight:600;padding:6px 10px;border-radius:8px}
+.msg.good{background:#e8f5e9;color:var(--ok)}
+.msg.bad{background:#fdecea;color:var(--bad)}
+.msg.info{background:#e3f2fd;color:var(--accent)}
+.chain{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:.85rem;margin:6px 0}
+.chain span{background:#e8f5e9;color:var(--ok);padding:3px 8px;border-radius:99px;font-weight:600}
+.chain span.q{background:#fff3e0;color:var(--warn)}
+.mcq .q{font-weight:700;font-size:1.05rem;margin:6px 0 10px}
+.mcq .fig svg{width:100%;max-width:380px;height:auto;display:block;margin:0 auto 8px}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;background:#fff;border:2px solid var(--line);border-radius:10px;padding:10px 12px;font-size:.98rem;cursor:pointer;font-family:inherit;color:inherit}
+.opt:hover:not(:disabled){border-color:#90caf9;background:#f5faff}
+.opt b{display:inline-block;width:1.6em;color:var(--accent)}
+.opt.sel{border-color:var(--accent);background:#e3f2fd}
+.opt.right{border-color:var(--ok);background:#e8f5e9}
+.opt.wrong{border-color:var(--bad);background:#fdecea;opacity:.75;cursor:not-allowed}
+.fb{margin-top:8px;padding:8px 10px;border-radius:8px;display:none}
+.fb.good,.fb.bad,.fb.hint{display:block}
+.fb.good{background:#e8f5e9;color:var(--ok)}
+.fb.bad{background:#fdecea;color:var(--bad)}
+.fb.hint{background:#fff8e1;color:#8a5a00}
+.conf{margin-top:10px;display:none}
+.conf.show{display:block}
+.conf button{border:2px solid var(--line);background:#fff;border-radius:99px;padding:6px 12px;margin:3px;cursor:pointer;font:inherit}
+.conf button.sel{border-color:var(--accent);background:#e3f2fd}
+.info{background:#f7f9fc;border-left:5px solid var(--brand);border-radius:8px;padding:10px 14px;margin:10px 0}
+.sandbox{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px;border:2px dashed #ffb74d;border-radius:12px;background:#fffaf0;margin:10px 0}
+#beam{width:80px;cursor:grab;touch-action:none}
+.locked{opacity:.35;pointer-events:none;filter:grayscale(.7)}
+.sim{width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:#fff;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+input[type=range]{width:100%}
+.readout{background:#f7f9fc;border-radius:8px;padding:8px 10px;margin-top:6px;font-size:.95rem}
+.checks{font-size:.9rem;color:var(--muted);margin-top:6px}
+.checks .yes{color:var(--ok);font-weight:600}
+.rag{display:flex;gap:6px;margin:6px 0 14px}
+.rag button{flex:1;border:2px solid var(--line);border-radius:10px;padding:8px;background:#fff;cursor:pointer;font-weight:600;font:inherit}
+.rag button.r.sel{background:#ef5350;color:#fff;border-color:#ef5350}
+.rag button.a.sel{background:#ffb300;color:#fff;border-color:#ffb300}
+.rag button.g.sel{background:#43a047;color:#fff;border-color:#43a047}
+.tip{font-size:.85rem;color:var(--muted)}
+.complete{background:#e8f5e9;border:2px solid #a5d6a7;border-radius:12px;padding:12px 14px;margin:10px 0}
+.complete b{color:var(--ok)}
+.lockmsg{font-size:.85rem;color:var(--muted);margin-top:6px}
+.rotrow{display:none}
+.rotrow.show{display:flex}
+.stat{font-size:.92rem;color:var(--muted)}
+.stat b{color:var(--ink)}
+.banner{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);background:#fff;border:3px solid var(--ok);color:var(--ok);font-weight:800;font-size:1.6rem;padding:12px 24px;border-radius:14px;box-shadow:0 6px 20px rgba(20,30,60,.2);text-align:center;white-space:nowrap;animation:pop .45s ease-out;z-index:5}
+.banner small{display:block;font-size:.9rem;color:var(--ink);font-weight:600}
+@keyframes pop{from{transform:translate(-50%,-50%) scale(.6);opacity:0}}
+.wrapR{position:relative}
+.eyeview{width:100%;max-width:300px;display:block;margin:6px auto}
+.modal{position:fixed;inset:0;background:rgba(20,30,60,.45);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
+.modal .box{background:#fff;border-radius:14px;padding:20px;max-width:440px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.modal .box h3{color:var(--brand)}
+/* report */
+#report h2{margin-top:0}
+.rhead{display:flex;flex-wrap:wrap;gap:8px 24px;font-size:.95rem;margin-bottom:10px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}
+.kpi{background:#f7f9fc;border-radius:10px;padding:10px 12px;border:1px solid var(--line)}
+.kpi .v{font-size:1.5rem;font-weight:800}
+.kpi .l{font-size:.8rem;color:var(--muted)}
+.band{display:inline-block;white-space:nowrap;font-size:.8rem;padding:3px 10px;border-radius:99px;font-weight:700;color:#fff}
+.band.above{background:#2e7d32}.band.inline{background:#1565c0}.band.below{background:#c62828}
+table.sc{width:100%;border-collapse:collapse;font-size:.92rem;margin:8px 0}
+table.sc td,table.sc th{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left;vertical-align:top}
+.bar{height:12px;background:#eceff4;border-radius:99px;overflow:hidden;min-width:90px}
+.bar i{display:block;height:100%;border-radius:99px}
+.pill{display:inline-block;font-size:.75rem;padding:2px 8px;border-radius:99px;font-weight:700}
+.pill.R{background:#ef5350;color:#fff}.pill.A{background:#ffb300;color:#fff}.pill.G{background:#43a047;color:#fff}
+ul.tight{margin:4px 0;padding-left:20px}
+details{margin-top:10px}
+@media print{header,#steps,.noprint{display:none!important}body{background:#fff}.card{box-shadow:none}}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+ <pattern id="bricks" width="30" height="16" patternUnits="userSpaceOnUse"><rect width="30" height="16" fill="#c4583a"/><path d="M0 0H30M0 8H30M15 0V8M0 8V16M30 8V16" stroke="#f1d8c8" stroke-width="1.6"/></pattern>
+ <pattern id="wood" width="60" height="16" patternUnits="userSpaceOnUse"><rect width="60" height="16" fill="#8a5a36"/><path d="M0 15H60M30 0V15" stroke="#6b4426" stroke-width="2"/></pattern>
+ <pattern id="grain" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="#c58b4b"/><path d="M0 6 Q6 3 12 6" stroke="#a46c33" stroke-width="1.2" fill="none"/></pattern>
+ <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#e3e8f0"/><line x1="0" y1="0" x2="0" y2="8" stroke="#7d8aa8" stroke-width="2.5"/></pattern>
+ <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe3ff"/><stop offset="1" stop-color="#eef8ff"/></linearGradient>
+ <linearGradient id="armySky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fb0c2"/><stop offset="1" stop-color="#dfe5ea"/></linearGradient>
+ <linearGradient id="silver" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e9f6ff"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#b9d9ef"/></linearGradient>
+ <linearGradient id="tubeG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#26a69a"/><stop offset=".5" stop-color="#4db6ac"/><stop offset="1" stop-color="#00897b"/></linearGradient>
+ <radialGradient id="tableGlow"><stop offset="0" stop-color="#fff3b0" stop-opacity=".95"/><stop offset=".6" stop-color="#ffd84d" stop-opacity=".45"/><stop offset="1" stop-color="#ffd84d" stop-opacity="0"/></radialGradient>
+ <radialGradient id="vignette"><stop offset=".72" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".5"/></radialGradient>
+ <filter id="glowY" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#ffd000" flood-opacity=".9"/></filter>
+</defs></svg>
 <header>
-  <h1>Periscope Mission</h1>
-  <p>Submarine <b>UAE Explorer</b> is under the Arabian Gulf. Adjust the mirrors so the crew can spot the dhow on the surface.</p>
+  <div>
+    <h1>🔭 The Periscope Mission: Reflection Lab</h1>
+    <div class="sub">Year 6 Physics · Reflection of Light &amp; Periscopes · Interactive simulation with assessment</div>
+  </div>
+  <div class="toggles noprint">
+    <button id="tSound" title="Sound effects">🔊 Sound</button>
+    <button id="tVoice" title="Read explanations aloud">🗣️ Voice</button>
+    <button id="tRestart" title="Restart this level">↺ Restart level</button>
+    <button id="tReset" title="Start the whole activity again">⟲ Reset all</button>
+  </div>
 </header>
-<main>
-  <div class="tabs" id="tabs">
-    <button data-m="1" class="active">Mission 1: Fix it</button>
-    <button data-m="2">Mission 2: Blind test</button>
-    <button data-m="3">Mission 3: Predict</button>
-    <button data-m="0">Free explore</button>
-  </div>
-  <div class="grid">
-    <div class="card">
-      <canvas id="scene" width="900" height="560" aria-label="Periscope ray diagram"></canvas>
-      <div class="legend">
-        <span style="--c:#ff4d4d">Light ray</span>
-        <span style="--c:#ffffff">Normal (dashed)</span>
-        <span style="--c:#bfe6ff">Plane mirror</span>
-      </div>
-    </div>
-    <div>
-      <div class="card">
-        <h2 id="mTitle">Mission 1</h2>
-        <p class="brief" id="mBrief"></p>
-        <div class="ctrl">
-          <label>Top mirror angle <span class="val" id="v1"></span></label>
-          <div class="row"><button data-s="a1" data-d="-1">−</button><input type="range" id="a1" min="10" max="80" step="1"><button data-s="a1" data-d="1">+</button></div>
-        </div>
-        <div class="ctrl">
-          <label>Bottom mirror angle <span class="val" id="v2"></span></label>
-          <div class="row"><button data-s="a2" data-d="-1">−</button><input type="range" id="a2" min="10" max="80" step="1"><button data-s="a2" data-d="1">+</button></div>
-        </div>
-        <div id="predictBox" class="predict" hidden>
-          <span>Angle of reflection r =</span><input id="pIn" type="number" min="0" max="90"><span>°</span>
-          <button id="pBtn">Check</button>
-        </div>
-        <div class="checks">
-          <label><input type="checkbox" id="showN" checked> Show normals</label>
-          <label><input type="checkbox" id="showA" checked> Show angle values</label>
-        </div>
-        <div id="status" class="status bad">Only darkness...</div>
-        <button id="newBtn" style="width:100%;margin-top:8px">New mission start</button>
-      </div>
-      <div class="card" style="margin-top:16px">
-        <h2>What the crew sees</h2>
-        <canvas id="view" width="300" height="170"></canvas>
-        <p class="brief" style="margin-top:6px">Missions completed: <span class="stars" id="stars">☆☆☆</span></p>
-      </div>
-    </div>
-  </div>
-
-  <div class="learn">
-    <div class="card">
-      <h2>Learning objectives</h2>
-      <ul>
-        <li>State the law of reflection: angle of incidence = angle of reflection.</li>
-        <li>Measure angles from the <b>normal</b> (a line at 90° to the mirror).</li>
-        <li>Explain why periscope mirrors are set at 45° and parallel.</li>
-        <li>Describe the image seen through a periscope.</li>
-      </ul>
-    </div>
-    <div class="card">
-      <h2>Key vocabulary</h2>
-      <ul>
-        <li><b>Incident ray</b> – the light ray arriving at the mirror.</li>
-        <li><b>Reflected ray</b> – the light ray leaving the mirror.</li>
-        <li><b>Normal</b> – imaginary line at 90° to the mirror surface.</li>
-        <li><b>Angle of incidence (i)</b> – between incident ray and normal.</li>
-        <li><b>Angle of reflection (r)</b> – between reflected ray and normal.</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="card" style="margin-top:16px">
-    <h2>Check your understanding <span id="score"></span></h2>
-    <div id="quiz"></div>
-  </div>
-</main>
-<footer>Periscope Mission · Light &amp; reflection simulation</footer>
+<div id="steps"></div>
+<main id="main"></main>
 
 <script>
-(() => {
-const W = 900, H = 560;
-const cv = document.getElementById('scene'), ctx = cv.getContext('2d');
-const vc = document.getElementById('view'), vx = vc.getContext('2d');
-function fit(c, w, h, g){ const d = window.devicePixelRatio || 1; c.width = w*d; c.height = h*d; g.setTransform(d,0,0,d,0,0); }
-fit(cv, W, H, ctx); fit(vc, 300, 170, vx);
+'use strict';
+/* ============ helpers ============ */
+const $=s=>document.querySelector(s);
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs={},html=''){const e=document.createElement(tag);for(const k in attrs){if(k==='class')e.className=attrs[k];else e.setAttribute(k,attrs[k]);}if(html)e.innerHTML=html;return e;}
+function S_(tag,attrs,parent){const e=document.createElementNS(NS,tag);if(attrs)for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function T_(p,x,y,t,a){const e=S_('text',Object.assign({x,y},a||{}),p);e.textContent=t;return e;}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const rad=d=>d*Math.PI/180,deg=r=>r*180/Math.PI,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const normDeg=a=>((a%360)+360)%360;
+const fmtT=s=>{s=Math.round(s);return s<60?`${s} s`:`${Math.floor(s/60)} min ${s%60} s`;};
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function svgPtOf(svg,cx,cy){const p=svg.createSVGPoint();p.x=cx;p.y=cy;return p.matrixTransform(svg.getScreenCTM().inverse());}
+function animateVal(dur,fn,done){const t0=performance.now();const st=t=>{const k=clamp((t-t0)/dur,0,1),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;fn(e);if(k<1)requestAnimationFrame(st);else done&&done();};requestAnimationFrame(st);}
+function svgDrag(svg,target,{start,move,end}){target.addEventListener('pointerdown',e=>{if(start&&start(e)===false)return;e.preventDefault();const p0=svgPtOf(svg,e.clientX,e.clientY);
+  const mv=ev=>{const p=svgPtOf(svg,ev.clientX,ev.clientY);move(p.x-p0.x,p.y-p0.y,p);};
+  const up=()=>{window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',up);end&&end();};
+  window.addEventListener('pointermove',mv);window.addEventListener('pointerup',up);});}
 
-// Geometry
-const TX = 200, TW = 70, TOP = 90, BOT = 470, OPEN = 70, SEA = 175;
-const C1 = {x: TX+TW/2, y: TOP+OPEN/2};
-const C2 = {x: TX+TW/2, y: BOT-OPEN/2};
-const EYE = {x: TX-55, y: BOT-OPEN/2, r: 14};
-const RAYS_Y = [C1.y-10, C1.y, C1.y+10];
-const RAY_X0 = 715;
+/* ============ state (saved, so a refresh never skips ahead) ============ */
+const KEY='periscopeMission.v2';
+function freshState(){return {stage:0,name:'',cls:'',start:0,end:0,pre:[],exit:[],items:[],mis:[],hints:[],refl:{},lv:{}};}
+let S;try{S=JSON.parse(localStorage.getItem(KEY));}catch(e){}
+if(!S||typeof S!=='object'||!Array.isArray(S.items))S=freshState();
+let soundOn=true,voiceOn=true;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function record(sc,correct,label){S.items.push({lv:S.stage,sc,correct:!!correct,label});save();}
+function misc(m){if(m&&!S.mis.some(x=>x.m===m))S.mis.push({lv:S.stage,m});save();}
+function useHint(){S.hints.push(S.stage);save();}
 
-const walls = [
-  [TX,TOP, TX+TW,TOP], [TX,TOP, TX,BOT-OPEN], [TX+TW,TOP+OPEN, TX+TW,BOT], [TX,BOT, TX+TW,BOT],
-  [0,0, W,0],[0,H, W,H],[0,0, 0,H],[W,0, W,H]
-];
-
-const st = { m: 1, a1: 30, a2: 60, done: {1:false,2:false,3:false}, pAnswer: null, pOk: false };
-const $ = id => document.getElementById(id);
-
-function mirror(c, deg, front){
-  const t = deg*Math.PI/180, cs = Math.cos(t), sn = Math.sin(t);
-  const L = Math.min(92, (TW-6)/Math.max(cs,1e-6), (OPEN-4)/Math.max(sn,1e-6));
-  const dx = cs*L/2, dy = -sn*L/2;
-  const n = front > 0 ? {x: sn, y: cs} : {x: -sn, y: -cs};
-  return {a:{x:c.x-dx,y:c.y-dy}, b:{x:c.x+dx,y:c.y+dy}, n};
-}
-
-function hitSeg(p, d, a, b){
-  const ex = b.x-a.x, ey = b.y-a.y;
-  const den = d.x*ey - d.y*ex;
-  if (Math.abs(den) < 1e-9) return null;
-  const qx = a.x-p.x, qy = a.y-p.y;
-  const t = (qx*ey - qy*ex)/den, u = (qx*d.y - qy*d.x)/den;
-  return (t > 1e-6 && u >= 0 && u <= 1) ? t : null;
-}
-function hitCircle(p, d, c){
-  const fx = p.x-c.x, fy = p.y-c.y;
-  const b = fx*d.x + fy*d.y, cc = fx*fx + fy*fy - c.r*c.r;
-  const disc = b*b - cc; if (disc < 0) return null;
-  const t = -b - Math.sqrt(disc); return t > 1e-6 ? t : null;
-}
-
-function trace(y0, m1, m2){
-  let p = {x: RAY_X0, y: y0}, d = {x:-1, y:0};
-  const pts = [{...p}], hits = [];
-  for (let k = 0; k < 8; k++){
-    let best = Infinity, kind = null, mir = null;
-    for (const w of walls){ const t = hitSeg(p, d, {x:w[0],y:w[1]}, {x:w[2],y:w[3]}); if (t !== null && t < best){best = t; kind = 'wall';} }
-    for (const m of [m1, m2]){ const t = hitSeg(p, d, m.a, m.b); if (t !== null && t < best){best = t; kind = 'mirror'; mir = m;} }
-    const te = hitCircle(p, d, EYE); if (te !== null && te < best){best = te; kind = 'eye';}
-    if (!isFinite(best)) break;
-    p = {x: p.x + d.x*best, y: p.y + d.y*best}; pts.push({...p});
-    if (kind === 'mirror'){
-      const dn = d.x*mir.n.x + d.y*mir.n.y;
-      if (dn >= 0) return {pts, hits, eye:false}; // back of mirror (painted)
-      const i = Math.acos(Math.min(1, -dn))*180/Math.PI;
-      const nd = {x: d.x - 2*dn*mir.n.x, y: d.y - 2*dn*mir.n.y};
-      const r = Math.acos(Math.min(1, nd.x*mir.n.x + nd.y*mir.n.y))*180/Math.PI;
-      hits.push({p:{...p}, n:mir.n, i, r, din:d, dout:nd});
-      d = nd;
-    } else return {pts, hits, eye: kind === 'eye'};
-  }
-  return {pts, hits, eye:false};
-}
-
-// Drawing helpers
-function drawDhow(g, x, y, s){
-  g.save(); g.translate(x, y); g.scale(s, s);
-  g.fillStyle = '#8b5a2b';
-  g.beginPath(); g.moveTo(-70,0); g.lineTo(80,0); g.lineTo(60,22); g.lineTo(-55,22); g.closePath(); g.fill();
-  g.fillStyle = '#6e4420'; g.fillRect(-55,6,115,4);
-  g.strokeStyle = '#4a2f14'; g.lineWidth = 3; g.beginPath(); g.moveTo(5,0); g.lineTo(5,-95); g.stroke();
-  g.fillStyle = '#f4ead2'; g.beginPath(); g.moveTo(7,-90); g.quadraticCurveTo(60,-55,62,-8); g.lineTo(7,-8); g.closePath(); g.fill();
-  g.fillStyle = '#e8dcc0'; g.beginPath(); g.moveTo(3,-80); g.quadraticCurveTo(-35,-45,-45,-8); g.lineTo(3,-8); g.closePath(); g.fill();
-  g.fillStyle = '#c8102e'; g.fillRect(5,-102,16,4); g.fillStyle='#00732f'; g.fillRect(5,-98,16,4); g.fillStyle='#fff'; g.fillRect(5,-94,16,4); g.fillStyle='#000'; g.fillRect(5,-90,16,4); g.fillStyle='#c8102e'; g.fillRect(1,-102,5,16);
-  g.restore();
-}
-
-function drawScene(res, m1, m2){
-  const g = ctx;
-  // sky & sea
-  let gr = g.createLinearGradient(0,0,0,SEA); gr.addColorStop(0,'#5fb4ea'); gr.addColorStop(1,'#bfe4fb');
-  g.fillStyle = gr; g.fillRect(0,0,W,SEA);
-  gr = g.createLinearGradient(0,SEA,0,H); gr.addColorStop(0,'#1c6ea4'); gr.addColorStop(1,'#06243d');
-  g.fillStyle = gr; g.fillRect(0,SEA,W,H-SEA);
-  g.fillStyle = '#ffe48a'; g.beginPath(); g.arc(860,40,22,0,7); g.fill();
-  g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 2;
-  for (let x = 0; x < W; x += 40){ g.beginPath(); g.arc(x+20, SEA, 20, Math.PI*1.15, Math.PI*1.85); g.stroke(); }
-  drawDhow(g, 770, SEA-18, 1);
-  g.fillStyle = '#fff'; g.font = '600 13px system-ui'; g.fillText('Dhow (object)', 728, SEA+22);
-
-  // submarine
-  g.fillStyle = '#4b5d6b';
-  g.beginPath(); g.ellipse(250, 505, 230, 58, 0, 0, Math.PI*2); g.fill();
-  g.fillStyle = '#3a4a56'; g.fillRect(TX-30, BOT-95, TW+60, 60);
-  g.fillStyle = '#d8e3ea'; g.font = '700 14px system-ui'; g.fillText('UAE EXPLORER', 300, 525);
-  // inside cabin
-  g.fillStyle = '#20313d'; g.fillRect(TX-110, BOT-OPEN, 110, OPEN);
-
-  // tube
-  g.fillStyle = 'rgba(30,40,48,.55)'; g.fillRect(TX, TOP, TW, BOT-TOP);
-  g.strokeStyle = '#1b2329'; g.lineWidth = 6; g.lineCap = 'square';
-  for (const w of walls.slice(0,4)){ g.beginPath(); g.moveTo(w[0],w[1]); g.lineTo(w[2],w[3]); g.stroke(); }
-  g.fillStyle = '#cfe0ea'; g.font = '600 12px system-ui';
-  g.fillText('Periscope tube', TX+TW+10, 300);
-
-  // mirrors with painted back
-  for (const m of [m1, m2]){
-    g.lineCap = 'round';
-    g.strokeStyle = '#55616a'; g.lineWidth = 7;
-    g.beginPath(); g.moveTo(m.a.x - m.n.x*3, m.a.y - m.n.y*3); g.lineTo(m.b.x - m.n.x*3, m.b.y - m.n.y*3); g.stroke();
-    g.strokeStyle = '#bfe6ff'; g.lineWidth = 4;
-    g.beginPath(); g.moveTo(m.a.x, m.a.y); g.lineTo(m.b.x, m.b.y); g.stroke();
-  }
-
-  // eye
-  g.save(); g.translate(EYE.x, EYE.y);
-  g.fillStyle = '#f6d7b8'; g.beginPath(); g.arc(-18, 0, 26, 0, 7); g.fill();
-  g.fillStyle = '#fff'; g.beginPath(); g.ellipse(0,0,13,8,0,0,7); g.fill();
-  g.fillStyle = res.ok ? '#2f9e44' : '#3d2b1f'; g.beginPath(); g.arc(4,0,5,0,7); g.fill();
-  g.restore();
-  g.fillStyle = '#fff'; g.font = '600 12px system-ui'; g.fillText('Eye', EYE.x-36, EYE.y+40);
-
-  // rays
-  for (const r of res.rays){
-    g.strokeStyle = r.eye ? '#ff4d4d' : 'rgba(255,77,77,.6)'; g.lineWidth = r.center ? 3 : 1.6;
-    g.beginPath(); g.moveTo(r.pts[0].x, r.pts[0].y);
-    for (const q of r.pts.slice(1)) g.lineTo(q.x, q.y);
-    g.stroke();
-    // arrowheads at midpoints
-    for (let k = 0; k < r.pts.length-1; k++){
-      const a = r.pts[k], b = r.pts[k+1], len = Math.hypot(b.x-a.x, b.y-a.y); if (len < 30) continue;
-      const mx = (a.x+b.x)/2, my = (a.y+b.y)/2, ux = (b.x-a.x)/len, uy = (b.y-a.y)/len;
-      g.fillStyle = g.strokeStyle; g.beginPath();
-      g.moveTo(mx+ux*7, my+uy*7); g.lineTo(mx-ux*5-uy*5, my-uy*5+ux*5); g.lineTo(mx-ux*5+uy*5, my-uy*5-ux*5); g.closePath(); g.fill();
-    }
-  }
-
-  // normals + angles on central ray
-  const c = res.rays[1];
-  const showN = $('showN').checked, showA = $('showA').checked && st.m !== 2;
-  c.hits.forEach((h, idx) => {
-    if (showN){
-      g.setLineDash([6,5]); g.strokeStyle = '#fff'; g.lineWidth = 1.5;
-      g.beginPath(); g.moveTo(h.p.x - h.n.x*10, h.p.y - h.n.y*10); g.lineTo(h.p.x + h.n.x*55, h.p.y + h.n.y*55); g.stroke();
-      g.setLineDash([]);
-    }
-    if (showA){
-      const bx = idx === 0 ? TX+TW+48 : TX-190, by = idx === 0 ? TOP+OPEN+20 : BOT-OPEN-60;
-      g.fillStyle = 'rgba(8,24,38,.85)'; g.fillRect(bx, by, 140, 46);
-      g.strokeStyle = '#ffcc33'; g.lineWidth = 1; g.strokeRect(bx, by, 140, 46);
-      g.fillStyle = '#ffcc33'; g.font = '700 13px system-ui';
-      g.fillText((idx===0?'Top':'Bottom')+' mirror', bx+8, by+17);
-      g.fillStyle = '#fff'; g.font = '600 13px system-ui';
-      const iv = h.i.toFixed(0)+'°';
-      const rv = (st.m === 3 && idx === 0 && !st.pOk) ? '?' : h.r.toFixed(0)+'°';
-      g.fillText('i = '+iv+'   r = '+rv, bx+8, by+36);
-    }
-  });
-}
-
-function drawView(n){
-  const g = vx, w = 300, h = 170;
-  g.clearRect(0,0,w,h);
-  g.save(); g.beginPath(); g.arc(w/2, h/2, 80, 0, 7); g.clip();
-  if (n === 0){
-    g.fillStyle = '#050505'; g.fillRect(0,0,w,h);
-    g.fillStyle = '#555'; g.font = '600 14px system-ui'; g.textAlign = 'center';
-    g.fillText('Darkness', w/2, h/2+5);
-  } else {
-    let gr = g.createLinearGradient(0,0,0,h); gr.addColorStop(0,'#5fb4ea'); gr.addColorStop(.62,'#bfe4fb'); gr.addColorStop(.62,'#1c6ea4'); gr.addColorStop(1,'#0b3a5e');
-    g.fillStyle = gr; g.fillRect(0,0,w,h);
-    drawDhow(g, w/2, h*.62-10, .9);
-    if (n < 3){ g.fillStyle = 'rgba(0,0,0,'+(n===1?.65:.4)+')'; g.fillRect(0,0,w,h); }
-  }
-  g.restore();
-  g.strokeStyle = '#111'; g.lineWidth = 8; g.beginPath(); g.arc(w/2, h/2, 82, 0, 7); g.stroke();
-  g.strokeStyle = 'rgba(255,255,255,.25)'; g.lineWidth = 1;
-  g.beginPath(); g.moveTo(w/2-80,h/2); g.lineTo(w/2+80,h/2); g.moveTo(w/2,h/2-80); g.lineTo(w/2,h/2+80); g.stroke();
-}
-
-const MISSIONS = {
-  0: {t:'Free explore', b:'Change both mirrors and watch the light ray. What happens at each mirror? Compare i and r.'},
-  1: {t:'Mission 1: Fix the periscope', b:'The mirrors were knocked out of place. Use the sliders so that light from the dhow reaches the eye.'},
-  2: {t:'Mission 2: Blind test', b:'The angle readouts are broken! Use only the ray diagram to line the mirrors up. Then reveal the angles.'},
-  3: {t:'Mission 3: Predict', b:'The bottom mirror is set. Look at the angle of incidence (i) on the top mirror and predict the angle of reflection (r).'}
+/* ============ sound (Web Audio, no files) ============ */
+let AC=null;
+function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();return AC;}
+function tone(f,d,{type='sine',vol=.2,t=0,f2=null}={}){const c=ac();if(!c||!soundOn)return;const o=c.createOscillator(),g=c.createGain(),s=c.currentTime+t;o.type=type;o.frequency.setValueAtTime(f,s);if(f2)o.frequency.exponentialRampToValueAtTime(f2,s+d);g.gain.setValueAtTime(.0001,s);g.gain.exponentialRampToValueAtTime(vol,s+.01);g.gain.exponentialRampToValueAtTime(.0001,s+d);o.connect(g).connect(c.destination);o.start(s);o.stop(s+d+.05);}
+const SFX={
+ click(){tone(660,.07,{vol:.12});},
+ pick(){tone(520,.06,{vol:.12,type:'triangle'});},
+ snap(){tone(420,.08,{vol:.2,type:'triangle'});tone(840,.14,{vol:.15,t:.06});},
+ correct(){tone(660,.15,{vol:.2});tone(880,.28,{vol:.2,t:.12});},
+ wrong(){tone(190,.25,{type:'square',vol:.07});tone(140,.3,{type:'square',vol:.07,t:.13});},
+ zap(){tone(1200,.25,{f2:500,vol:.1,type:'triangle'});},
+ shine(){[880,1100,1320,1760].forEach((f,i)=>tone(f,.16,{vol:.07,t:i*.07}));},
+ click2(){tone(300,.05,{vol:.15,type:'square'});},
+ fanfare(){[523,659,784,1047].forEach((f,i)=>tone(f,.3,{vol:.16,type:'triangle',t:i*.13}));tone(1047,.7,{vol:.14,t:.55});}
 };
+/* voice */
+let voice=null;
+function pickVoice(){const vs=speechSynthesis.getVoices();voice=vs.find(v=>/en[-_]GB/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang))||null;}
+if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}
+function speak(t){if(!('speechSynthesis' in window))return;speechSynthesis.cancel();if(!voiceOn||!t)return;const u=new SpeechSynthesisUtterance(t.replace(/<[^>]+>/g,''));if(voice)u.voice=voice;u.rate=.95;speechSynthesis.speak(u);}
+$('#tSound').onclick=()=>{soundOn=!soundOn;$('#tSound').classList.toggle('off',!soundOn);if(soundOn)SFX.click();};
+$('#tVoice').onclick=()=>{voiceOn=!voiceOn;$('#tVoice').classList.toggle('off',!voiceOn);if(!voiceOn&&'speechSynthesis' in window)speechSynthesis.cancel();};
 
-function update(){
-  st.a1 = +$('a1').value; st.a2 = +$('a2').value;
-  const hide = st.m === 2;
-  $('v1').textContent = hide ? '??°' : st.a1+'°';
-  $('v2').textContent = hide ? '??°' : st.a2+'°';
-  const m1 = mirror(C1, st.a1, 1), m2 = mirror(C2, st.a2, -1);
-  const rays = RAYS_Y.map((y,k) => ({...trace(y, m1, m2), center: k===1}));
-  const n = rays.filter(r => r.eye).length;
-  const res = {rays, ok: n === 3};
-  ctx.clearRect(0,0,W,H);
-  drawScene(res, m1, m2); drawView(n);
-  const s = $('status');
-  if (n === 3){ s.className = 'status ok'; s.textContent = 'Target in view! The dhow is clear.'; }
-  else if (n > 0){ s.className = 'status part'; s.textContent = 'Almost! Part of the image is reaching the eye.'; }
-  else { s.className = 'status bad'; s.textContent = 'Only darkness... the light misses the eye.'; }
-  if (n === 3 && (st.m === 1 || st.m === 2) && !st.done[st.m]){
-    st.done[st.m] = true;
-    s.textContent = st.m === 2 ? 'Mission 2 complete! Angles: '+st.a1+'° and '+st.a2+'°.' : 'Mission 1 complete! Both mirrors at '+st.a1+'° and '+st.a2+'°.';
-  }
-  if (st.m === 3){
-    if (st.pOk) { s.className = 'status ok'; s.textContent = 'Correct! r = i. Mission 3 complete.'; }
-  }
-  $('stars').textContent = [1,2,3].map(k => st.done[k] ? '★' : '☆').join('');
-  st.lastI = rays[1].hits[0] ? rays[1].hits[0].i : null;
+/* ============ steps bar + level locking ============ */
+const STEPS=['Start','Pre-check','1 Build','2 Light Journey','3 Lab','4 Apply','5 Trench','Exit check','Reflect','Report'];
+function setStep(i){$('#steps').innerHTML=STEPS.map((s,j)=>`<span class="${j<i?'done':j===i?'now':''}">${j<i?'✓ ':j>i?'🔒 ':''}${s}</span>`).join('');window.scrollTo({top:0,behavior:'smooth'});
+ $('#tRestart').style.display=(i>=1&&i<=7)?'':'none';}
+const main=$('#main');
+let cleanups=[];const onClean=f=>cleanups.push(f);
+function clear(){main.innerHTML='';if('speechSynthesis' in window)speechSynthesis.cancel();cleanups.forEach(f=>{try{f();}catch(e){}});cleanups=[];}
+function go(i){S.stage=i;save();clear();setStep(i);SCREENS[i]();}
+/* restarting a level wipes only that level's data, then starts it fresh */
+function purge(i){S.items=S.items.filter(x=>x.lv!==i);S.mis=S.mis.filter(x=>x.lv!==i);S.hints=S.hints.filter(x=>x!==i);delete S.lv[i];if(i===1)S.pre=[];if(i===7)S.exit=[];if(i===8)S.refl={};}
+function restartLevel(i){purge(i);go(i);}
+function modal(title,text,yes,onYes){const m=el('div',{class:'modal'},`<div class="box"><h3>${title}</h3><p>${text}</p><div class="row"><button class="btn light" data-a="n">Cancel</button><button class="btn red" data-a="y">${yes}</button></div></div>`);document.body.appendChild(m);
+ m.onclick=e=>{const a=e.target.dataset&&e.target.dataset.a;if(!a&&e.target!==m)return;m.remove();if(a==='y')onYes();};}
+$('#tRestart').onclick=()=>modal('↺ Restart this level?','Your work in this level will be cleared. Earlier levels are kept.','Restart level',()=>restartLevel(S.stage));
+$('#tReset').onclick=()=>modal('⟲ Reset everything?','This clears all levels, the reflection and the report card, and goes back to the start.','Reset all',()=>{S=freshState();save();go(0);});
+/* "level complete" box: the only way forward */
+function levelDone(box,text,nextLabel){S.lv[S.stage]=Object.assign(S.lv[S.stage]||{},{done:true});save();SFX.fanfare();
+ box.insertAdjacentHTML('beforeend',`<div class="complete">✅ <b>${STEPS[S.stage]} complete!</b> ${text||''}</div><div class="row"><button class="btn green" id="nextLv">${nextLabel||('Unlock '+STEPS[S.stage+1]+' ➜')}</button></div>`);
+ const b=$('#nextLv');b.onclick=()=>go(S.stage+1);b.scrollIntoView({behavior:'smooth',block:'center'});}
+function lvData(){return S.lv[S.stage]=S.lv[S.stage]||{};}
+
+/* ============ success criteria ============ */
+const SCN={SC1:'I can identify the incident ray, the reflected ray and the normal.',SC2:'I can identify angle i and angle r, and explain that i = r.',SC3:'I can explain how a plane mirror changes the direction of light.',SC4:'I can explain how a periscope uses two mirrors to see over obstacles.'};
+const SCS={SC1:'Rays & the normal',SC2:'Angles i, r and i = r',SC3:'Mirrors change the direction of light',SC4:'How a periscope works'};
+
+/* ============ ray diagram (used in questions) ============ */
+function wedge(cx,cy,r,a1,a2,sw){return `M ${cx} ${cy} L ${cx+r*Math.cos(a1)} ${cy+r*Math.sin(a1)} A ${r} ${r} 0 0 ${sw} ${cx+r*Math.cos(a2)} ${cy+r*Math.sin(a2)} Z`;}
+function arrow(g,x,y,a,c,s=10){S_('path',{d:`M ${s} 0 L ${-s*.75} ${-s*.7} L ${-s*.35} 0 L ${-s*.75} ${s*.7} Z`,fill:c,transform:`translate(${x} ${y}) rotate(${deg(a)})`},g);}
+function rayFig(o){o=Object.assign({th:40,labels:true,arcI:null,arcR:null,arcM:null},o);
+ const svg=S_('svg',{viewBox:'0 0 420 250'});S_('rect',{width:420,height:250,rx:12,fill:'#f7f9fc'},svg);
+ const P={x:210,y:205},L=170,t=rad(o.th),A={x:P.x-L*Math.sin(t),y:P.y-L*Math.cos(t)},B={x:P.x+L*Math.sin(t),y:P.y-L*Math.cos(t)};
+ S_('rect',{x:40,y:207,width:340,height:14,fill:'url(#hatch)'},svg);S_('line',{x1:40,y1:205,x2:380,y2:205,stroke:'#4aa3dd','stroke-width':6,'stroke-linecap':'round'},svg);
+ S_('line',{x1:P.x,y1:P.y,x2:P.x,y2:28,stroke:'#5e35b1','stroke-width':2.5,'stroke-dasharray':'8 6'},svg);
+ const aU=-Math.PI/2,aI=Math.atan2(A.y-P.y,A.x-P.x),aR=Math.atan2(B.y-P.y,B.x-P.x);
+ const lb=(a,r,txt,c)=>T_(svg,P.x+r*Math.cos(a),P.y+r*Math.sin(a)+5,txt,{'text-anchor':'middle','font-size':15,'font-weight':700,fill:c});
+ if(o.arcI){S_('path',{d:wedge(P.x,P.y,55,aU,aI,0),fill:'rgba(94,53,177,.15)',stroke:'#5e35b1','stroke-width':2},svg);lb((aU+aI)/2,80,o.arcI,'#5e35b1');}
+ if(o.arcR){S_('path',{d:wedge(P.x,P.y,55,aU,aR,1),fill:'rgba(94,53,177,.15)',stroke:'#5e35b1','stroke-width':2},svg);lb((aU+aR)/2,80,o.arcR,'#5e35b1');}
+ if(o.arcM){S_('path',{d:wedge(P.x,P.y,42,Math.PI,aI,1),fill:'rgba(230,126,0,.18)',stroke:'#e67e00','stroke-width':2},svg);lb((Math.PI+aI+2*Math.PI)/2,64,o.arcM,'#c25e00');}
+ S_('line',{x1:A.x,y1:A.y,x2:P.x,y2:P.y,stroke:'#f57c00','stroke-width':4.5,'stroke-linecap':'round'},svg);S_('line',{x1:P.x,y1:P.y,x2:B.x,y2:B.y,stroke:'#f57c00','stroke-width':4.5,'stroke-linecap':'round'},svg);
+ arrow(svg,(A.x+P.x)/2,(A.y+P.y)/2,Math.atan2(P.y-A.y,P.x-A.x),'#d35400');arrow(svg,(B.x+P.x)/2,(B.y+P.y)/2,Math.atan2(B.y-P.y,B.x-P.x),'#d35400');
+ if(o.labels){const s={'font-size':13,'font-weight':600,fill:'#263238'};T_(svg,(A.x+P.x)/2-14,(A.y+P.y)/2+20,o.l1||'ray A',Object.assign({'text-anchor':'end'},s));T_(svg,(B.x+P.x)/2+14,(B.y+P.y)/2+20,o.l2||'ray B',Object.assign({'text-anchor':'start'},s));T_(svg,P.x+8,40,'normal',s);T_(svg,378,240,'mirror',Object.assign({'text-anchor':'end'},s));}
+ return svg.outerHTML;}
+
+/* ============ MCQ component ============ */
+function mcq(box,q,{mode='learn',label='',onDone,title=''}={}){
+ box.innerHTML='';const w=el('div',{class:'mcq'});
+ if(title)w.appendChild(el('div',{class:'tip'},title));
+ w.appendChild(el('div',{class:'q'},q.q));
+ if(q.fig)w.appendChild(el('div',{class:'fig'},q.fig));
+ const list=el('div',{class:'opts'}),fb=el('div',{class:'fb'});let first=true,done=false,hinted=false,chosen=null,conf=null;
+ const opts=shuffle(q.opts);let ready=()=>{};
+ const confBox=el('div',{class:'conf'},'<div class="tip">How sure are you?</div>');
+ const nextBtn=el('button',{class:'btn',disabled:''},'Next ➜');
+ opts.forEach((o,i)=>{const b=el('button',{class:'opt'},`<b>${'ABCD'[i]}</b>${o.t}`);
+  b.onclick=()=>{if(done||b.disabled)return;
+   if(mode==='test'){list.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');chosen=o;SFX.click();confBox.classList.add('show');ready();return;}
+   if(o.ok){done=true;b.classList.add('right');SFX.correct();fb.className='fb good';fb.innerHTML='✅ Correct!'+(first?'':' (on a second try – keep going!)')+(q.why?' '+q.why:'');
+    record(q.sc,first&&!hinted,label||q.q);setTimeout(()=>onDone&&onDone(first&&!hinted),q.why?1900:1100);}
+   else{first=false;b.classList.add('wrong');b.disabled=true;SFX.wrong();misc(o.mis);fb.className='fb bad';fb.innerHTML='❌ '+(o.fb||'Not quite – think again and try another answer.');}
+  };list.appendChild(b);});
+ w.appendChild(list);
+ if(mode==='test'){
+  [['sure','😀 Sure'],['unsure','🤔 Unsure'],['guess','🎲 Guessing']].forEach(([v,t])=>{const c=el('button',{},t);c.onclick=()=>{confBox.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');conf=v;SFX.click();ready();};confBox.appendChild(c);});
+  w.appendChild(confBox);const r=el('div',{class:'row'});r.appendChild(nextBtn);w.appendChild(r);
+  ready=()=>{nextBtn.disabled=!(chosen&&conf);};
+  nextBtn.onclick=()=>{if(!chosen||!conf)return;onDone({ok:!!chosen.ok,conf,mis:chosen.mis,ans:chosen.t});};
+ }else{
+  w.appendChild(fb);
+  if(q.hint){const hb=el('button',{class:'btn light'},'💡 Hint');hb.onclick=()=>{if(hinted||done)return;hinted=true;useHint();fb.className='fb hint';fb.innerHTML='💡 '+q.hint;hb.disabled=true;};const r=el('div',{class:'row'});r.appendChild(hb);w.appendChild(r);}
+ }
+ box.appendChild(w);
 }
+function quizSeq(box,qs,{title,labelPre,onAll}){let i=0;const show=()=>{if(i>=qs.length){onAll();return;}mcq(box,qs[i],{title:`${title} – question ${i+1} of ${qs.length}`,label:labelPre+qs[i].q.replace(/<[^>]+>/g,''),onDone:()=>{i++;show();}});};show();}
 
-function rnd(){ let v; do { v = 15 + Math.floor(Math.random()*61); } while (Math.abs(v-45) < 8); return v; }
-
-function setMission(m){
-  st.m = m; st.pOk = false;
-  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', +b.dataset.m === m));
-  $('mTitle').textContent = MISSIONS[m].t; $('mBrief').textContent = MISSIONS[m].b;
-  $('predictBox').hidden = m !== 3;
-  $('a1').disabled = m === 3; $('a2').disabled = m === 3;
-  document.querySelectorAll('[data-s]').forEach(b => b.disabled = m === 3);
-  $('showA').parentElement.style.display = m === 2 ? 'none' : '';
-  if (m === 3){ $('a1').value = 20 + Math.floor(Math.random()*50); $('a2').value = 45; $('pIn').value = ''; }
-  else if (m === 0){ $('a1').value = 45; $('a2').value = 45; }
-  else { $('a1').value = rnd(); $('a2').value = rnd(); }
-  update();
-}
-
-$('a1').addEventListener('input', update); $('a2').addEventListener('input', update);
-$('showN').addEventListener('change', update); $('showA').addEventListener('change', update);
-document.querySelectorAll('[data-s]').forEach(b => b.addEventListener('click', () => {
-  const el = $(b.dataset.s); el.value = Math.max(+el.min, Math.min(+el.max, +el.value + +b.dataset.d)); update();
-}));
-document.querySelectorAll('#tabs button').forEach(b => b.addEventListener('click', () => setMission(+b.dataset.m)));
-$('newBtn').addEventListener('click', () => setMission(st.m));
-$('pBtn').addEventListener('click', () => {
-  const v = parseFloat($('pIn').value), i = Math.round(st.lastI);
-  const s = $('status');
-  if (isNaN(v)){ s.className='status part'; s.textContent='Type your prediction first.'; return; }
-  if (Math.abs(v - i) <= 1){ st.pOk = true; st.done[3] = true; update(); }
-  else { s.className='status bad'; s.textContent='Not quite. Remember the law of reflection: r = i. Try again.'; }
-});
-
-// Quiz
-const QUIZ = [
-  {q:'At what angle to the tube are the mirrors in a periscope placed?', o:['30°','45°','60°','90°'], a:1, e:'At 45°, each mirror turns the light through 90°.'},
-  {q:'The law of reflection says...', o:['angle of incidence = angle of reflection','angle of incidence is always 90°','light bends when it reflects','reflected angle is double the incident angle'], a:0, e:'i = r for every plane mirror.'},
-  {q:'Angles of incidence and reflection are measured from...', o:['the mirror surface','the normal','the floor','the eye'], a:1, e:'The normal is the line at 90° to the mirror.'},
-  {q:'A ray hits a mirror with i = 45°. What is the angle between the incident and reflected ray?', o:['45°','90°','135°','180°'], a:1, e:'i + r = 45° + 45° = 90°, so the light turns a corner.'},
-  {q:'The image seen through a simple two-mirror periscope is...', o:['upside down','upright and the same way round as the object','upright but laterally inverted','not visible'], a:1, e:'Two reflections cancel out the left–right swap, so the image is upright and the right way round.'},
-  {q:'Why do submarines use periscopes?', o:['To make objects bigger','To see above the water while staying hidden','To make light travel faster','To bend light round the Earth'], a:1, e:'The periscope lets the crew look over the surface without surfacing.'}
+/* ============ pre-check & exit check ============ */
+const PRE=[
+ {sc:'SC2',q:'What does the law of reflection say?',opts:[{t:'The angle of incidence equals the angle of reflection (i = r)',ok:1},{t:'The angle of reflection is always bigger than the angle of incidence',mis:'Does not yet know that i = r'},{t:'Light always reflects straight back the way it came'},{t:'Light passes through a mirror',mis:'Thinks light passes through mirrors'}]},
+ {sc:'SC1',q:'What is the incident ray?',opts:[{t:'The ray of light travelling towards the mirror',ok:1},{t:'The ray of light that bounces off the mirror',mis:'Mixes up the incident ray and the reflected ray'},{t:'A line drawn at 90° to the mirror'},{t:'The shiny surface of the mirror'}]},
+ {sc:'SC1',q:'What is the normal?',opts:[{t:'An imaginary line at 90° to the mirror, where the ray hits it',ok:1},{t:'The ray that bounces off the mirror',mis:'Confuses the normal with a light ray'},{t:'A line drawn along the mirror surface',mis:'Thinks the normal lies along the mirror'},{t:'The usual amount of light in a room'}]},
+ {sc:'SC1',q:'What is the reflected ray?',opts:[{t:'The ray of light that bounces off the mirror',ok:1},{t:'The ray of light travelling towards the mirror',mis:'Mixes up the incident ray and the reflected ray'},{t:'The dashed line at 90° to the mirror'},{t:'Light that goes through the mirror',mis:'Thinks light passes through mirrors'}]},
+ {sc:'SC2',q:'In the diagram, which angle is the <b>angle of incidence (i)</b>?',fig:rayFig({th:40,l1:'incident ray',l2:'reflected ray',arcI:'X',arcR:'Y',arcM:'Z'}),opts:[{t:'Angle X – between the incident ray and the normal',ok:1},{t:'Angle Y – between the reflected ray and the normal',mis:'Mixes up angle i and angle r'},{t:'Angle Z – between the incident ray and the mirror',mis:'Measures angles from the mirror instead of the normal'},{t:'None of them'}]},
+ {sc:'SC2',q:'In the same kind of diagram, which angle is the <b>angle of reflection (r)</b>?',fig:rayFig({th:30,l1:'incident ray',l2:'reflected ray',arcI:'X',arcR:'Y'}),opts:[{t:'Angle Y – between the reflected ray and the normal',ok:1},{t:'Angle X – between the incident ray and the normal',mis:'Mixes up angle i and angle r'},{t:'The angle between the reflected ray and the mirror',mis:'Measures angles from the mirror instead of the normal'},{t:'The angle between the two rays'}]}
 ];
-let score = 0, answered = 0;
-const qz = $('quiz');
-QUIZ.forEach((item, qi) => {
-  const d = document.createElement('div'); d.className = 'q';
-  d.innerHTML = '<p>'+(qi+1)+'. '+item.q+'</p><div class="opts"></div><div class="fb"></div>';
-  const opts = d.querySelector('.opts');
-  item.o.forEach((t, oi) => {
-    const b = document.createElement('button'); b.textContent = t;
-    b.addEventListener('click', () => {
-      if (d.dataset.done) return; d.dataset.done = 1; answered++;
-      if (oi === item.a){ b.classList.add('right'); score++; d.querySelector('.fb').textContent = 'Correct! ' + item.e; }
-      else { b.classList.add('wrong'); opts.children[item.a].classList.add('right'); d.querySelector('.fb').textContent = 'Not quite. ' + item.e; }
-      $('score').textContent = '— ' + score + ' / ' + QUIZ.length + (answered === QUIZ.length ? ' (done)' : '');
-    });
-    opts.appendChild(b);
-  });
-  qz.appendChild(d);
-});
+const EXIT=[
+ {sc:'SC1',q:'Light bounces off a mirror. In the diagram, which line is the <b>normal</b>?',fig:rayFig({th:35,l1:'line P',l2:'line Q'}),opts:[{t:'The dashed line at 90° to the mirror',ok:1},{t:'Line P',mis:'Confuses the normal with a light ray'},{t:'Line Q',mis:'Confuses the normal with a light ray'},{t:'The mirror line',mis:'Thinks the normal lies along the mirror'}]},
+ {sc:'SC2',q:'Sam measured <b>50°</b> between the incident ray and the <b>mirror</b>. What is the real angle of incidence?',fig:rayFig({th:40,l1:'incident ray',l2:'reflected ray',arcM:'50°'}),opts:[{t:'40°',ok:1},{t:'50°',mis:'Measures angles from the mirror instead of the normal'},{t:'90°'},{t:'130°'}]},
+ {sc:'SC2',q:'The angle of incidence is 35°. What is the <b>total</b> angle between the incident ray and the reflected ray?',opts:[{t:'70°',ok:1},{t:'35°',mis:'Confuses the angle between the rays with the angle of incidence'},{t:'55°'},{t:'90°'}]},
+ {sc:'SC3',q:'Why can\'t you see a parrot that is hidden behind a high wall?',opts:[{t:'Light from the parrot travels in straight lines, so the wall blocks it',ok:1},{t:'Your eyes send out light, and the wall stops it',mis:'Thinks light travels from the eye to the object'},{t:'Light bends around walls, but too slowly'},{t:'The parrot does not reflect any light'}]},
+ {sc:'SC4',q:'Why are the two mirrors in a periscope tilted at 45° and parallel?',opts:[{t:'So each mirror turns the light through 90°, sending it down the tube and then out to the eye',ok:1},{t:'So the mirrors absorb more light',mis:'Thinks mirrors absorb light'},{t:'So light can pass straight through the mirrors',mis:'Thinks light passes through mirrors'},{t:'So the image looks bigger',mis:'Thinks periscope mirrors make the image bigger'}]},
+ {sc:'SC4',q:'<b>Application:</b> the bottom mirror of a submarine periscope falls off. What happens?',opts:[{t:'Light reflects off the top mirror and goes down the tube, but it is never turned towards the eye, so nothing is seen',ok:1},{t:'The view stays exactly the same',mis:'Thinks one mirror is enough for a periscope'},{t:'You still see the object, but upside down'},{t:'The eye sends light up the tube instead',mis:'Thinks light travels from the eye to the object'}]}
+];
 
-setMission(1);
-})();
+/* ============ SCREEN 0: start ============ */
+function screenStart(){
+ const c=el('div',{class:'card'});
+ c.innerHTML=`<h2>Welcome, scientist! 🔬</h2>
+ <p>You are going to <b>build a periscope</b>, then <b>follow a ray of light</b> through it, test mirrors in a virtual lab, and use reflection to solve real problems. Read the explanations, listen to the sounds and answer the questions. <b>Each level unlocks only when the one before it is complete.</b></p>
+ <div class="grid"><div>
+  <label class="f" for="nm">Your full name</label><input type="text" id="nm" placeholder="e.g. Aisha Khan" autocomplete="off" value="${esc(S.name||'')}">
+  <label class="f" for="cl">Class</label><input type="text" id="cl" value="${esc(S.cls||'6A')}" autocomplete="off">
+  <div class="row"><button class="btn light" id="testSnd">🔈 Test sound</button><span class="tip">Use headphones if you can.</span></div>
+  <div class="row"><button class="btn green" id="go" disabled>Start ➜</button></div>
+ </div><div class="info">
+  <b>Learning objective:</b> I can explain the law of reflection and use reflection of light to understand how a periscope works.<br><br>
+  <b>Success criteria</b>
+  <ul class="tight"><li>${SCN.SC1}</li><li>${SCN.SC2}</li><li>${SCN.SC3}</li><li>${SCN.SC4}</li></ul>
+  <b>Your route:</b> Pre-check → 1 Build → 2 Light Journey → 3 Lab → 4 Apply → 5 Trench → Exit check → Reflect → Report card
+ </div></div>
+ <details class="tip"><summary>For teachers</summary>
+ <p>Every question and task is tagged to a success criterion. Only <b>first-attempt answers without a hint</b> count towards mastery; students can retry to learn. The pre-check (baseline) and exit check are 6-question tests with no feedback, so <b>progress = exit score − pre-check score</b>. Attainment is the mean mastery across the four success criteria: <b>75%+ Above expectations, 50–74% In line with expectations, below 50% Below expectations</b>. Levels are locked in order: a level must be completed before the next one opens, and a page refresh restarts the current level rather than skipping it. In Level 1 each periscope part has 6 attempts with stronger hints each time; after the 6th wrong attempt the part is placed for the student (scored as incorrect and listed on the report).</p></details>`;
+ main.appendChild(c);
+ const nm=$('#nm'),gob=$('#go');const chk=()=>gob.disabled=nm.value.trim().length<2;nm.oninput=chk;chk();
+ $('#testSnd').onclick=()=>{ac();SFX.shine();setTimeout(()=>speak('Sound is working. Get ready to reflect!'),600);};
+ gob.onclick=()=>{ac();const n=nm.value.trim(),cl=$('#cl').value.trim()||'—';S=freshState();S.name=n;S.cls=cl;S.start=Date.now();SFX.correct();go(1);};
+}
+
+/* ============ SCREENS 1 & 7: tests ============ */
+function screenTest(which){
+ const qs=which==='pre'?PRE:EXIT;let i=S[which].length;
+ const c=el('div',{class:'card'});
+ c.innerHTML=which==='pre'?`<h2>Pre-check: what do you already know?</h2><p class="lead">6 quick questions. There is no feedback yet – just do your best. This shows your starting point.</p><div id="tq"></div>`
+  :`<h2>Exit check: how much have you learnt?</h2><p class="lead">6 final questions. Compare with your pre-check to see your progress!</p><div id="tq"></div>`;
+ main.appendChild(c);
+ speak(which==='pre'?'Pre check. Answer six quick questions to show what you already know.':'Exit check. Six final questions to show your progress.');
+ function show(){if(i>=qs.length){SFX.correct();levelDone($('#tq'),which==='pre'?'Now build your own periscope.':'Now reflect on your learning.');return;}
+  const q=qs[i];mcq($('#tq'),q,{mode:'test',title:`Question ${i+1} of ${qs.length}`,onDone:r=>{S[which].push({sc:q.sc,ok:r.ok,conf:r.conf,q:q.q.replace(/<[^>]+>/g,''),ans:r.ans});if(which==='exit'){record(q.sc,r.ok,'Exit check: '+q.q.replace(/<[^>]+>/g,''));if(!r.ok)misc(r.mis);}save();i++;show();}});}
+ show();
+}
+
+/* ============ periscope scene (persistent left card) ============ */
+function drawParrot(g,x,y,s=1){const p=S_('g',{transform:`translate(${x} ${y}) scale(${s})`},g);
+ S_('path',{d:'M -4 16 L -14 50 L 2 20 Z',fill:'#3a86ff'},p);S_('path',{d:'M 0 16 L -4 52 L 6 18 Z',fill:'#ffbe0b'},p);
+ S_('ellipse',{cx:0,cy:4,rx:13,ry:19,fill:'#e63946'},p);S_('ellipse',{cx:-5,cy:7,rx:7,ry:14,fill:'#2a9d8f',transform:'rotate(14 -5 7)'},p);
+ S_('circle',{cx:2,cy:-17,r:11,fill:'#e63946'},p);S_('path',{d:'M 11 -21 Q 23 -17 14 -8 Q 14 -14 10 -14 Z',fill:'#ffb703',stroke:'#c98a00','stroke-width':1},p);
+ S_('circle',{cx:5,cy:-20,r:4,fill:'#fff'},p);S_('circle',{cx:6,cy:-20,r:2,fill:'#111'},p);return p;}
+function mirrorReal(g,len=96,th=6){S_('rect',{x:-len/2,y:0,width:len,height:th,rx:2,fill:'#4a5568'},g);S_('rect',{x:-len/2,y:-th,width:len,height:th,rx:2,fill:'url(#silver)',stroke:'#6aa7cf','stroke-width':1.2},g);}
+const MSLOT={top:{x:210,y:100,rot:225},bottom:{x:210,y:460,rot:45}};
+function buildScope(){
+ const svg=S_('svg',{id:'scope',viewBox:'0 0 360 560'});
+ S_('rect',{width:360,height:520,fill:'url(#sky)'},svg);S_('circle',{cx:320,cy:46,r:24,fill:'#ffe082'},svg);
+ S_('rect',{x:14,y:120,width:16,height:400,fill:'#8d5a2b',rx:3},svg);
+ [[22,96,40,'#4caf50'],[-2,120,26,'#43a047'],[44,118,26,'#66bb6a'],[20,66,28,'#66bb6a']].forEach(([x,y,r,c])=>S_('circle',{cx:x,cy:y,r,fill:c},svg));
+ S_('path',{d:'M 28 136 Q 60 130 88 132',stroke:'#8d5a2b','stroke-width':7,fill:'none','stroke-linecap':'round'},svg);
+ drawParrot(svg,70,106,.85);
+ T_(svg,72,66,'Object (parrot)',{'font-size':11,'font-weight':700,fill:'#263238','text-anchor':'middle'});
+ S_('rect',{x:95,y:172,width:50,height:348,fill:'url(#bricks)',stroke:'#8f3a22','stroke-width':2},svg);
+ T_(svg,120,165,'Wall',{'text-anchor':'middle','font-size':12,'font-weight':700,fill:'#8f3a22'});
+ S_('rect',{y:520,width:360,height:40,fill:'#8bc34a'},svg);
+ // person
+ S_('path',{d:'M 268 520 Q 272 492 306 490 Q 340 492 346 520 Z',fill:'#1565c0'},svg);
+ S_('circle',{cx:308,cy:460,r:28,fill:'#f2c39b'},svg);S_('path',{d:'M 280 452 Q 288 424 316 428 Q 336 434 334 456 Q 322 440 304 442 Q 290 444 280 452Z',fill:'#3b2a1a'},svg);
+ S_('ellipse',{cx:290,cy:458,rx:3.5,ry:4.5,fill:'#1b2440'},svg);T_(svg,308,418,'Your eye',{'text-anchor':'middle','font-size':12,'font-weight':700,fill:'#263238'});
+ const parts=S_('g',{id:'parts'},svg);
+ const part=(id,ghostFn,realFn)=>{const g=S_('g',{class:'part',id:'p-'+id},parts);const gh=S_('g',{class:'ghost'},g);ghostFn(gh);const r=S_('g',{class:'real'},g);realFn(r);return g;};
+ part('tube',g=>S_('rect',{x:170,y:40,width:80,height:480,rx:10},g),g=>{S_('rect',{x:170,y:40,width:80,height:480,rx:10,fill:'url(#tubeG)',stroke:'#00695c','stroke-width':3},g);S_('rect',{x:177,y:47,width:66,height:466,rx:6,fill:'#004d40',opacity:.18},g);});
+ part('hA',g=>S_('polygon',{points:'176,66 244,66 244,134'},g),g=>S_('polygon',{points:'176,66 244,66 244,134',fill:'url(#grain)',stroke:'#6d4c2b','stroke-width':2,'stroke-linejoin':'round'},g));
+ part('hB',g=>S_('polygon',{points:'176,426 176,494 244,494'},g),g=>S_('polygon',{points:'176,426 176,494 244,494',fill:'url(#grain)',stroke:'#6d4c2b','stroke-width':2,'stroke-linejoin':'round'},g));
+ ['mT','mB'].forEach(id=>{const s=MSLOT[id==='mT'?'top':'bottom'];const g=S_('g',{class:'part mg',id:'p-'+id},parts);
+  const gh=S_('g',{class:'ghost',transform:`translate(${s.x} ${s.y}) rotate(${s.rot})`,style:'display:none'},g);S_('rect',{x:-48,y:-6,width:96,height:12,rx:3},gh);
+  const r=S_('g',{class:'real',transform:`translate(${s.x} ${s.y}) rotate(0)`},g);mirrorReal(r);});
+ part('window',g=>S_('rect',{x:160,y:60,width:20,height:80,rx:4},g),g=>{S_('rect',{x:160,y:60,width:20,height:80,rx:4,fill:'#ff9f1c',stroke:'#c76b00','stroke-width':2},g);S_('rect',{x:165,y:67,width:10,height:66,rx:2,fill:'#bfe9ff'},g);});
+ part('eye',g=>S_('rect',{x:244,y:420,width:28,height:80,rx:6},g),g=>{S_('rect',{x:244,y:424,width:22,height:72,rx:6,fill:'#2d3748'},g);S_('rect',{x:262,y:420,width:10,height:80,rx:5,fill:'#111827'},g);S_('rect',{x:252,y:432,width:4,height:56,rx:2,fill:'#8fd3ff'},g);});
+ const labs=S_('g',{id:'labs'},svg);
+ [['tube',250,300,262,300,'Tube','start'],['window',160,100,150,212,'Object window','start'],['hA',244,72,262,40,'Mirror holder','start'],['mT',230,118,262,150,'Plane mirror (45°)','start'],['hB',178,490,150,540,'Mirror holder','start'],['mB',192,442,150,404,'Plane mirror (45°)','start'],['eye',266,500,262,512,'Eyepiece','start']].forEach(([k,x1,y1,x2,y2,t])=>{const g=S_('g',{class:'lab',id:'l-'+k},labs);S_('line',{x1,y1,x2,y2:y2-4},g);const tx=T_(g,x2,y2,t,{});tx.setAttribute('paint-order','stroke');tx.setAttribute('stroke','#fff');tx.setAttribute('stroke-width','3');});
+ S_('g',{id:'fx'},svg);
+ const card=el('div',{class:'card',id:'scopeCard'});card.appendChild(svg);return card;
+}
+let scopeCard=null;
+function scope(){if(!scopeCard)scopeCard=buildScope();return scopeCard;}
+function resetScope(all){const s=scope();s.querySelectorAll('.part').forEach(p=>{p.classList.toggle('placed',!!all);p.classList.remove('glow');});s.querySelectorAll('.lab').forEach(l=>l.classList.toggle('on',!!all));
+ setMirror('mT',all?225:0);setMirror('mB',all?45:0);$('#fx').innerHTML='';}
+function setMirror(id,rot){const s=MSLOT[id==='mT'?'top':'bottom'];document.querySelector(`#p-${id} .real`).setAttribute('transform',`translate(${s.x} ${s.y}) rotate(${rot})`);}
+function placePart(id){$('#p-'+id).classList.add('placed');$('#l-'+id).classList.add('on');}
+function zoneAt(cx,cy){const svg=$('#scope'),r=svg.getBoundingClientRect();if(cx<r.left||cx>r.right||cy<r.top||cy>r.bottom)return undefined;
+ const p=svgPtOf(svg,cx,cy);
+ if(p.x>=148&&p.x<=192&&p.y>=50&&p.y<=150)return 'window';
+ if(p.x>=236&&p.x<=290&&p.y>=408&&p.y<=512)return 'eyepiece';
+ if(p.x>=162&&p.x<=258&&p.y>=32&&p.y<=528)return p.y<175?'top':p.y>385?'bottom':'tube';
+ return null;}
+
+/* ============ SCREEN 2: build ============ */
+const PIECES={tube:{name:'Tube (body)'},window:{name:'Object window'},eyepiece:{name:'Eyepiece'},holderA:{name:'Mirror holder A'},holderB:{name:'Mirror holder B'},mirror1:{name:'Plane mirror',kind:'mirror'},mirror2:{name:'Plane mirror',kind:'mirror'}};
+function pieceIcon(k){const v={tube:'<rect x="34" y="2" width="32" height="96" rx="6" fill="#4db6ac" stroke="#00695c" stroke-width="3"/>',window:'<rect x="40" y="10" width="20" height="80" rx="4" fill="#ff9f1c" stroke="#c76b00" stroke-width="2"/><rect x="45" y="17" width="10" height="66" fill="#bfe9ff"/>',
+ eyepiece:'<rect x="36" y="14" width="22" height="72" rx="6" fill="#2d3748"/><rect x="56" y="10" width="10" height="80" rx="5" fill="#111827"/>',
+ holderA:'<polygon points="16,14 84,14 84,82" fill="#c58b4b" stroke="#6d4c2b" stroke-width="3"/>',holderB:'<polygon points="16,18 16,86 84,86" fill="#c58b4b" stroke="#6d4c2b" stroke-width="3"/>',
+ mirror1:'<rect x="4" y="44" width="92" height="6" fill="#d9eefc" stroke="#6aa7cf"/><rect x="4" y="50" width="92" height="6" fill="#4a5568"/>'};v.mirror2=v.mirror1;
+ return `<svg class="ico" viewBox="0 0 100 100">${v[k]}</svg>`;}
+const BSTEPS=[
+ {need:'tube',zones:['tube','top','bottom','window','eyepiece'],g:'tube',ask:'First, place the main <b>body</b> of the periscope.',
+  hints:['The body holds all the other parts. It must be taller than the wall.','It needs to be on YOUR side of the wall, close to your eye.','Choose the long teal tube.','Drop it in the tall dashed outline next to the wall.','Look at the glowing outline — drop the tube there.'],why:'The tube stands beside the wall and is taller than it, so its top can reach above the wall.'},
+ {need:'window',zones:['window'],g:'window',ask:'Light from the parrot must <b>enter</b> the periscope. Which part lets light in, and where does it go?',
+  hints:['Light from the parrot must get INTO the periscope. Which part has glass to let light in?','The opening must be HIGHER than the wall, facing the parrot.','It is the orange window. It goes at the TOP of the tube.','Put it on the LEFT side at the top of the tube, facing the parrot.','Look at the glowing outline — drop the window there.'],why:'Light from the parrot travels in a straight line into this window, above the wall.'},
+ {need:'holderA',zones:['top'],g:'hA',ask:'The light needs a mirror to turn it <b>down</b> the tube. First fix a <b>mirror holder</b> where the light will hit.',
+  hints:['Holders keep the mirrors tilted at exactly 45°. Look at the shapes of the two wedges.','The light comes in through the top window, so the holder goes where that light will hit.','Choose the wedge whose slope faces down-left, towards the window.','It fits in the TOP-RIGHT corner inside the tube.','Look at the glowing outline — drop the holder there.'],why:'This wedge holds the top mirror at 45°, facing the window.'},
+ {need:'mirror',zones:['top'],g:'mT',rot:225,ask:'Now place a <b>plane mirror</b> on that holder, then <b>rotate</b> it to the correct angle.',
+  hints:['A plane mirror changes the direction of light. This one must turn the light DOWN the tube.','Remember i = r. To turn light through 90°, the mirror must be tilted at 45°.','The mirror sits on the sloping side of the top holder.','Rotate it to match the holder\'s slope, with the SHINY silver side facing the window (away from the wood).','Look at the glowing outline — copy its angle.'],why:'The top mirror reflects light from the window DOWN the tube (i = r = 45°).'},
+ {need:'holderB',zones:['bottom'],g:'hB',ask:'The light travels down the tube. Fix the other <b>mirror holder</b> where the light will reach.',
+  hints:['This wedge must hold a mirror that turns the light towards your eye.','The light is travelling DOWN the tube — where will it end up?','It fits inside the BOTTOM of the tube.','Put it in the BOTTOM-LEFT corner inside the tube, opposite your eye.','Look at the glowing outline — drop the holder there.'],why:'This wedge holds the bottom mirror at 45°, facing the eyepiece.'},
+ {need:'mirror',zones:['bottom'],g:'mB',rot:45,ask:'Place the second <b>plane mirror</b> and rotate it so the light turns towards your eye.',
+  hints:['This mirror must turn the light a second time, towards your eye.','Remember i = r. A 45° tilt turns light through 90°.','It sits on the sloping side of the bottom holder.','Rotate it so it is PARALLEL to the top mirror, with the silver side facing up towards the light.','Look at the glowing outline — copy its angle.'],why:'The bottom mirror reflects the light sideways, towards the eyepiece.'},
+ {need:'eyepiece',zones:['eyepiece'],g:'eye',ask:'Finally, where does the light <b>leave</b> the periscope to reach your eye?',
+  hints:['The eyepiece is where you look in.','Your eye is low down, behind the wall.','It goes at the BOTTOM of the tube.','Put it on the RIGHT side at the bottom, next to your eye.','Look at the glowing outline — drop the eyepiece there.'],why:'The light leaves the periscope here and travels into your eye. Your periscope is complete!'}
+];
+const MAXTRY=6;let B;
+function screenBuild(){
+ B={step:0,err:{},sel:null,rot:0,rotating:false,auto:[],firstTry:0};
+ const g=el('div',{class:'grid'});const panel=el('div',{class:'card'});g.append(scope(),panel);main.appendChild(g);resetScope(false);
+ panel.innerHTML=`<h2>Level 1: Build the periscope</h2><div id="bInstr" class="info"></div><div class="chain" id="chain"></div>
+  <div class="tray" id="tray"></div><div class="msg" id="bMsg"></div>
+  <div class="row rotrow" id="rotrow"><button class="btn" id="rl">⟲ Rotate</button><button class="btn" id="rr">⟳ Rotate</button><button class="btn green" id="rc">✔ Check angle</button></div>
+  <div class="row"><label class="tip"><input type="checkbox" id="showLab" checked> Show labels</label><span class="stat" id="bStat"></span></div><div id="bQ"></div>`;
+ const tray=$('#tray');
+ shuffle(Object.keys(PIECES)).forEach(k=>{const p=el('div',{class:'piece','data-k':k},pieceIcon(k)+PIECES[k].name);dragPiece(p,k);tray.appendChild(p);});
+ $('#showLab').onchange=e=>$('#scope').classList.toggle('nolabels',!e.target.checked);
+ $('#scope').onclick=e=>{if(!B||!B.sel||B.rotating)return;const z=zoneAt(e.clientX,e.clientY);const k=B.sel;selectPiece(null);if(z!==undefined)onDrop(k,z);};
+ $('#rl').onclick=()=>rotateM(-45);$('#rr').onclick=()=>rotateM(45);$('#rc').onclick=checkAngle;
+ refreshBuild();
+ speak('Level 1. Build the periscope. Drag each part onto the picture, in the order that light travels through it.');
+}
+function bmsg(t,cls){const m=$('#bMsg');if(m){m.className='msg '+(cls||'');m.innerHTML=t;}}
+function selectPiece(k){B.sel=k;document.querySelectorAll('.piece').forEach(p=>p.classList.toggle('sel',p.dataset.k===k));if(k)bmsg(`Selected <b>${PIECES[k].name}</b> – now tap where it goes on the picture.`,'info');}
+function dragPiece(item,k){
+ item.addEventListener('pointerdown',e=>{if(B.step>=BSTEPS.length||B.rotating)return;e.preventDefault();const st={x:e.clientX,y:e.clientY};let gh=null;
+  const mv=ev=>{if(!gh&&Math.hypot(ev.clientX-st.x,ev.clientY-st.y)>6){gh=item.cloneNode(true);gh.classList.add('dragghost');document.body.appendChild(gh);SFX.pick();}if(gh){gh.style.left=ev.clientX+'px';gh.style.top=ev.clientY+'px';}};
+  const up=ev=>{window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',up);
+   if(gh){gh.remove();selectPiece(null);const z=zoneAt(ev.clientX,ev.clientY);if(z!==undefined)onDrop(k,z);else bmsg('Drop the part onto the picture.','info');}
+   else{SFX.click();selectPiece(B.sel===k?null:k);}};
+  window.addEventListener('pointermove',mv);window.addEventListener('pointerup',up);});
+}
+function bfail(t){const st=BSTEPS[B.step];SFX.wrong();B.err[B.step]=(B.err[B.step]||0)+1;const n=B.err[B.step];
+ if(n>=MAXTRY){autoPlace();return;}
+ if(n===5){const p=$('#p-'+st.g);p.classList.remove('glow');void p.getBBox();p.classList.add('glow');if(st.need==='mirror')p.querySelector('.ghost').style.display='';}
+ bmsg(`❌ ${t}<br>💡 <b>Hint ${n}:</b> ${st.hints[n-1]}<br><span class="tip">Attempts left for this part: <b>${MAXTRY-n}</b> of ${MAXTRY}. Mistakes help us learn – keep going!</span>`,'bad');refreshBuild();}
+function onDrop(k,z){const st=BSTEPS[B.step];if(!st)return;
+ const kind=PIECES[k].kind||k;
+ if(kind!==st.need){bfail(`The <b>${PIECES[k].name}</b> is not the part needed now.`);return;}
+ if(z===null){bfail('That is not on the periscope. Drop the part onto the tube area.');return;}
+ if(!st.zones.includes(z)){bfail(`Right part, wrong place! Think about where the light travels.`);return;}
+ if(st.need==='mirror'){B.mirrorPiece=k;B.rotating=true;B.rot=0;setMirror(st.g,0);$('#p-'+st.g).classList.add('placed');const p=document.querySelector(`.piece[data-k="${k}"]`);if(p)p.style.visibility='hidden';
+  $('#rotrow').classList.add('show');bmsg('✅ Good position! Now use <b>⟲ ⟳</b> to turn the mirror to the correct angle, then press <b>✔ Check angle</b>.','info');SFX.snap();refreshBuild();return;}
+ doPlace(k);
+}
+function rotateM(a){if(!B.rotating)return;const st=BSTEPS[B.step];const r0=B.rot;SFX.click();animateVal(180,e=>setMirror(st.g,r0+a*e),()=>{B.rot=normDeg(r0+a);setMirror(st.g,B.rot);});}
+function checkAngle(){if(!B.rotating)return;const st=BSTEPS[B.step];
+ if(normDeg(B.rot)===st.rot){$('#rotrow').classList.remove('show');B.rotating=false;doPlace(B.mirrorPiece);return;}
+ misc(normDeg(B.rot-st.rot)===180?'Thinks either side of a mirror reflects light (the shiny side must face the light)':'Unsure why periscope mirrors must be tilted at 45°');
+ bfail(normDeg(B.rot-st.rot)===180?'The angle is right, but the mirror is facing the wrong way – the dark back cannot reflect light.':'That angle will not send the light the right way.');}
+function doPlace(k){const st=BSTEPS[B.step];const ok=!B.err[B.step];if(ok)B.firstTry++;
+ record('SC4',ok,'Build: place the '+PIECES[k].name.toLowerCase()+(st.need==='mirror'?' at 45°':''));
+ finishStep(k,`✅ <b>${PIECES[k].name} placed!</b> ${st.why}`,'good');}
+function autoPlace(){const st=BSTEPS[B.step];const k=st.need==='mirror'?(B.mirrorPiece||(document.querySelector('.piece[data-k="mirror1"]')?'mirror1':'mirror2')):st.need;
+ B.auto.push(st.need==='mirror'?(st.g==='mT'?'Top plane mirror':'Bottom plane mirror'):PIECES[k].name);
+ record('SC4',false,`Build: ${PIECES[k].name.toLowerCase()} (placed for you after ${MAXTRY} tries)`);SFX.snap();
+ $('#rotrow').classList.remove('show');B.rotating=false;
+ finishStep(k,`⏭️ You used all ${MAXTRY} attempts, so the <b>${PIECES[k].name}</b> has been placed for you. ${st.why} Look carefully at where it goes – then carry on!`,'info');
+ speak('Here is where it goes. Look carefully, then carry on.');}
+function finishStep(k,text,cls){const st=BSTEPS[B.step];const p=$('#p-'+st.g);p.classList.remove('glow');if(st.need==='mirror'){p.querySelector('.ghost').style.display='none';animateVal(300,e=>setMirror(st.g,st.rot),()=>setMirror(st.g,st.rot));}
+ placePart(st.g);const pc=document.querySelector(`.piece[data-k="${k}"]`);if(pc)pc.remove();
+ bmsg(text,cls);if(cls==='good')speak(PIECES[k].name+' placed.');B.step++;refreshBuild();
+ if(B.step>=BSTEPS.length)buildDone();}
+function refreshBuild(){const ch=$('#chain');if(!ch)return;
+ const names=['Tube','Window','Holder','Top mirror','Holder','Bottom mirror','Eyepiece'];
+ ch.innerHTML='<b>Built:</b> '+names.slice(0,B.step).map(n=>`<span>${n}</span>`).join(' → ')+(B.step<7?(B.step?' → ':'')+'<span class="q">?</span>':'');
+ const st=BSTEPS[B.step];
+ $('#bInstr').innerHTML=st?`Step <b>${B.step+1} of 7</b>: ${st.ask} <span class="tip">(You can also tap a part, then tap its place.)</span>`:'✅ Your periscope is built! Answer 3 questions about it.';
+ $('#bStat').innerHTML=`Parts placed: <b>${B.step}/7</b> · Attempts used on this part: <b>${B.err[B.step]||0}/${MAXTRY}</b>`;}
+const BUILDQ=[
+ {sc:'SC4',q:'Why are the two mirrors tilted at 45°?',hint:'With i = r = 45°, how much does the light turn?',opts:[{t:'So each mirror turns the light through 90°',ok:1},{t:'So the mirrors can absorb the light',mis:'Thinks mirrors absorb light',fb:'Mirrors reflect light – they do not absorb it.'},{t:'So the light can pass through the mirrors',mis:'Thinks light passes through mirrors',fb:'Light cannot pass through a mirror; it bounces off.'},{t:'So the periscope looks neat',fb:'The angle matters for the light, not for looks!'}]},
+ {sc:'SC3',q:'Which way must the shiny (silver) sides of the two mirrors face?',hint:'Light has to hit the shiny side to be reflected.',opts:[{t:'Towards each other, so the light can bounce from one to the other',ok:1},{t:'Away from each other',mis:'Thinks either side of a mirror reflects light (the shiny side must face the light)',fb:'Then the light would hit the dark backs and not be reflected.'},{t:'Both towards the eyepiece',fb:'The top mirror must face the window and the bottom mirror.'},{t:'It does not matter',mis:'Thinks either side of a mirror reflects light (the shiny side must face the light)',fb:'Only the shiny side reflects light.'}]},
+ {sc:'SC4',q:'How many times is the light reflected inside your periscope?',hint:'Count the mirrors.',opts:[{t:'Twice – once by each mirror',ok:1},{t:'Once',mis:'Thinks one mirror is enough for a periscope',fb:'There are two mirrors, and the light hits both.'},{t:'Never – it goes straight through',mis:'Thinks light passes through mirrors',fb:'The tube bends the light path, so it must reflect.'},{t:'Four times',fb:'There are only two mirrors.'}]}];
+function buildDone(){const d=lvData();d.parts=7;d.firstTry=B.firstTry;d.attempts=Object.values(B.err).reduce((a,b)=>a+b,0)+7;d.auto=B.auto;save();
+ $('#tray').style.display='none';SFX.fanfare();
+ const fx=$('#fx');S_('polyline',{points:'84,100 210,100 210,460 290,460',fill:'none',stroke:'#fbc02d','stroke-width':5,'stroke-linejoin':'round',filter:'url(#glowY)'},fx);
+ speak('Periscope complete! The two plane mirrors change the direction of light by reflection.');
+ quizSeq($('#bQ'),BUILDQ,{title:'Your periscope',labelPre:'Build quiz: ',onAll:()=>{$('#fx').innerHTML='';levelDone($('#bQ'),'The two plane mirrors change the direction of light by reflection. Next, follow a ray of light through it!');}});}
+
+/* ============ SCREEN 3: light journey ============ */
+const BEAM_ART='<circle r="9" fill="#fff59d" stroke="#fbc02d" stroke-width="3"/><g stroke="#fbc02d" stroke-width="3" stroke-linecap="round"><line x1="0" y1="-18" x2="0" y2="-13"/><line x1="0" y1="18" x2="0" y2="13"/><line x1="-18" y1="0" x2="-13" y2="0"/><line x1="18" y1="0" x2="13" y2="0"/><line x1="-13" y1="-13" x2="-9" y2="-9"/><line x1="13" y1="13" x2="9" y2="9"/><line x1="13" y1="-13" x2="9" y2="-9"/><line x1="-13" y1="13" x2="-9" y2="9"/></g>';
+const STOPS=[
+ {key:'window',to:[210,100],say:'Light from the sun hits the parrot and bounces off it in all directions. Some of that light travels in a straight line, over the top of the wall, and into the window of the periscope. The window is higher than the wall, so the wall does not block this light.',
+  what:{sc:'SC3',q:'Why can light from the parrot get into the periscope?',hint:'Is the window higher or lower than the top of the wall?',opts:[{t:'The window is higher than the wall, and light travels in straight lines',ok:1},{t:'Light bends around the wall by itself',mis:'Thinks light bends around obstacles by itself',fb:'Light travels in straight lines – it does not bend around walls.'},{t:'My eye sends light out to the parrot',mis:'Thinks light travels from the eye to the object',fb:'Light comes FROM the object INTO your eye.'},{t:'The wall reflects the light into the window',fb:'Bricks do not reflect light like a mirror.'}]},
+  next:{q:'Where does the light go next? 🤔',opts:[{t:'To the top mirror',ok:1},{t:'Straight to your eye',fb:'Your eye is low down, behind the wall – the light cannot go there in a straight line.'},{t:'Out through the other side of the tube',fb:'The tube is solid – something inside changes the light\'s direction.'},{t:'To the bottom mirror',fb:'Not yet – the light is travelling sideways at the top of the tube.'}]}},
+ {key:'top',to:[210,460],nAt:[210,100],n:[-1,1],din:[1,0],dout:[0,1],say:'The light hits the top mirror. Look at the dashed normal line, drawn at 90 degrees to the mirror. The angle of incidence is 45 degrees, so the angle of reflection is also 45 degrees. The light is turned through 90 degrees and now travels down the tube.',
+  what:{sc:'SC2',q:'The angle of incidence at the top mirror is 45°. What is the angle of reflection?',hint:'Remember the law of reflection.',opts:[{t:'45°',ok:1},{t:'90°',mis:'Confuses the angle between the rays with the angle of incidence',fb:'90° is the angle between the two rays. Each angle is measured from the normal.'},{t:'30°',mis:'Does not yet know that i = r',fb:'The angle of reflection is always equal to the angle of incidence.'},{t:'0°',fb:'Look at the purple angle on the reflected side.'}]},
+  next:{q:'Which way does the light travel after the top mirror? 🤔',opts:[{t:'Down the tube, to the bottom mirror',ok:1},{t:'Back to the parrot',fb:'The mirror is tilted at 45°, so the light turns through 90°, not straight back.'},{t:'Through the mirror and out of the back',mis:'Thinks light passes through mirrors',fb:'Light cannot pass through a mirror.'},{t:'Up into the sky',fb:'Check which way the shiny side of the mirror faces.'}]}},
+ {key:'bottom',to:[288,460],nAt:[210,460],n:[1,-1],din:[0,1],dout:[1,0],say:'Now the light hits the bottom mirror. Again the angle of incidence is 45 degrees and the angle of reflection is 45 degrees. The light turns through 90 degrees once more, so it travels sideways, out of the eyepiece.',
+  what:{sc:'SC1',q:'The ray coming DOWN the tube is travelling towards the bottom mirror. What is it called here?',hint:'Is it travelling towards this mirror, or away from it?',opts:[{t:'The incident ray',ok:1},{t:'The reflected ray',mis:'Mixes up the incident ray and the reflected ray',fb:'It was reflected by the top mirror, but it is travelling TOWARDS this mirror, so here it is the incident ray.'},{t:'The normal',mis:'Confuses the normal with a light ray',fb:'The normal is the dashed line at 90° to the mirror.'},{t:'The mirror line',fb:'The mirror line is the mirror\'s surface.'}]},
+  next:{q:'Where does the light go after the bottom mirror? 🤔',opts:[{t:'Out of the eyepiece and into your eye',ok:1},{t:'Back up to the top mirror',fb:'The bottom mirror turns the light sideways, not back up.'},{t:'Into the wall',fb:'The shiny side faces the eyepiece, not the wall.'},{t:'Out of the bottom of the tube',fb:'The mirror changes its direction before it reaches the bottom.'}]}},
+ {key:'eye',say:'The light enters your eye, and you see the parrot – even though the wall is in the way! Remember: light travelled from the parrot to your eye. Your eye does not send light out.',
+  what:{sc:'SC4',q:'Which sentence best explains how the periscope let you see the parrot?',hint:'Think about what each mirror did to the light.',opts:[{t:'Two mirrors changed the direction of the light twice, so light from the parrot went over the wall and into my eye',ok:1},{t:'My eye sent light to the parrot through the tube',mis:'Thinks light travels from the eye to the object',fb:'Light travels from the object to your eye.'},{t:'The light went through the wall',fb:'Walls block light – that is why we need a periscope.'},{t:'One mirror is enough to see over the wall',mis:'Thinks one mirror is enough for a periscope',fb:'With one mirror the light goes down the tube but never turns towards your eye.'}]}}
+];
+function screenJourney(){
+ const g=el('div',{class:'grid'});const panel=el('div',{class:'card'});g.append(scope(),panel);main.appendChild(g);resetScope(true);
+ panel.innerHTML=`<h2>Level 2: The Light Journey</h2><div id="jInfo"></div><div id="jQ"></div>`;
+ $('#jInfo').innerHTML=`<div class="sandbox"><svg id="beam" viewBox="-22 -22 44 44">${BEAM_ART}</svg><b>Drag the light ray from the parrot into the top window of the periscope!</b><span class="tip">(or tap the light)</span></div>`;
+ speak('Level 2. Drag the light from the parrot into the top window of the periscope.');
+ const bm=$('#beam');
+ bm.addEventListener('pointerdown',e=>{e.preventDefault();ac();const st={x:e.clientX,y:e.clientY};let gh=null;
+  const mv=ev=>{if(!gh&&Math.hypot(ev.clientX-st.x,ev.clientY-st.y)>6){gh=bm.cloneNode(true);gh.removeAttribute('id');gh.style.cssText='position:fixed;width:60px;pointer-events:none;z-index:100;transform:translate(-50%,-50%)';document.body.appendChild(gh);SFX.pick();}if(gh){gh.style.left=ev.clientX+'px';gh.style.top=ev.clientY+'px';}};
+  const up=ev=>{window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',up);
+   if(gh){gh.remove();const z=zoneAt(ev.clientX,ev.clientY);if(z==='window'||z==='top')startLight();else{SFX.wrong();info('<p>❌ Drop the light into the <b>top window</b> (the orange part on the left of the tube).</p>');speak('Put the light into the top window.');}}
+   else startLight();};
+  window.addEventListener('pointermove',mv);window.addEventListener('pointerup',up);});
+ function info(h){$('#jInfo').innerHTML=`<div class="info">${h}</div>`;}
+ let fx=$('#fx'),dot=null,trail=null,pts=[];
+ function travel(from,to,dur){return new Promise(res=>{const t0=performance.now();(function f(t){const k=Math.min(1,(t-t0)/dur);const x=from[0]+(to[0]-from[0])*k,y=from[1]+(to[1]-from[1])*k;dot.setAttribute('transform',`translate(${x} ${y})`);trail.setAttribute('points',pts.map(p=>p.join(',')).join(' ')+` ${x},${y}`);if(k<1)requestAnimationFrame(f);else{pts.push(to);res();}})(t0);});}
+ let started=false;
+ async function startLight(){if(started)return;started=true;$('#jInfo').innerHTML='';fx.innerHTML='';SFX.zap();
+  trail=S_('polyline',{fill:'none',stroke:'#fbc02d','stroke-width':5,'stroke-linejoin':'round',filter:'url(#glowY)'},fx);dot=S_('g',{},fx);dot.innerHTML=BEAM_ART;pts=[[84,100]];
+  await travel([84,100],[170,100],1100);arrive(0);}
+ function drawNormal(st){const [x,y]=st.nAt,n=[st.n[0]/Math.SQRT2,st.n[1]/Math.SQRT2];const g=S_('g',{},fx);
+  S_('line',{x1:x-n[0]*14,y1:y-n[1]*14,x2:x+n[0]*62,y2:y+n[1]*62,stroke:'#5e35b1','stroke-width':2.5,'stroke-dasharray':'6 4'},g);
+  const an=Math.atan2(n[1],n[0]),ai=Math.atan2(-st.din[1],-st.din[0]),ar=Math.atan2(st.dout[1],st.dout[0]);const cr=(a,b)=>Math.cos(a)*Math.sin(b)-Math.sin(a)*Math.cos(b)>0?1:0;
+  S_('path',{d:wedge(x,y,30,an,ai,cr(an,ai)),fill:'rgba(245,124,0,.35)',stroke:'#f57c00','stroke-width':1.5},g);S_('path',{d:wedge(x,y,30,an,ar,cr(an,ar)),fill:'rgba(94,53,177,.3)',stroke:'#5e35b1','stroke-width':1.5},g);
+  const lab=(a,t,c)=>{const tx=T_(g,x+Math.cos(a)*48,y+Math.sin(a)*48+4,t,{'text-anchor':'middle','font-size':12,'font-weight':800,fill:c});tx.setAttribute('paint-order','stroke');tx.setAttribute('stroke','#fff');tx.setAttribute('stroke-width','3');};
+  let mi=(an+ai)/2;if(Math.abs(an-ai)>Math.PI)mi+=Math.PI;let mr=(an+ar)/2;if(Math.abs(an-ar)>Math.PI)mr+=Math.PI;  }
+ function arrive(i){const st=STOPS[i];SFX.shine();if(st.nAt)drawNormal(st);
+  const title={window:'📍 The object window',top:'📍 The top mirror',bottom:'📍 The bottom mirror',eye:'📍 Your eye'}[st.key];
+  info(`<h3>${title}</h3><p>${st.say}</p>`+(st.nAt?`<div class="tip"><b>🔍 Zoomed in on the mirror:</b> the dashed <b>normal</b> is at 90° to the mirror, and i = r = 45°.</div>${rayFig({th:45,l1:'incident ray',l2:'reflected ray',arcI:'i = 45°',arcR:'r = 45°'}).replace('<svg ','<svg style="width:100%;max-width:360px;display:block;margin:6px auto" ')}`:''));speak(st.say);
+  mcq($('#jQ'),st.what,{title:'What happens here?',label:'Journey – '+title.slice(3),onDone:()=>{if(st.next)askNext(i);else finish();}});}
+ function askNext(i){const st=STOPS[i];mcq($('#jQ'),{...st.next,sc:'SC4',hint:'Follow the light: parrot → window → top mirror → bottom mirror → eye.'},{title:'Guide the light!',label:'Journey – where next after the '+st.key,onDone:async()=>{$('#jQ').innerHTML='';info('<p>The light moves on… 🚀</p>');SFX.zap();
+   const from=pts[pts.length-1];await travel(from,st.to,i===1?2200:1200);arrive(i+1);}});}
+ function finish(){dot.remove();SFX.fanfare();const d=lvData();d.done=true;save();
+  info('<h3>🎉 You can see the parrot!</h3><p>Summary: light from the <b>parrot</b> → enters the <b>window</b> → reflects off the <b>top mirror</b> (i = r = 45°) → travels down the tube → reflects off the <b>bottom mirror</b> (i = r = 45°) → leaves the <b>eyepiece</b> → enters your <b>eye</b>.</p>');
+  levelDone($('#jQ'),'Next, test mirrors in the virtual lab.');}
+}
+
+/* ============ SCREEN 4: virtual lab ============ */
+const LABQ={
+ ap:{sc:'SC2',q:'PREDICT: If you make the angle of incidence BIGGER, what will happen to the angle of reflection?',opts:[{t:'It will get bigger by the same amount',ok:1},{t:'It will get smaller',mis:'Does not yet know that i = r',fb:'Test it and see!'},{t:'It will stay the same',fb:'Test it and see!'},{t:'The light will stop reflecting',fb:'A mirror reflects light at every angle.'}]},
+ ae:{sc:'SC2',q:'EXPLAIN: What did your test show?',hint:'Compare the two numbers in the readout every time you moved the slider.',opts:[{t:'The angle of reflection always equals the angle of incidence (i = r)',ok:1},{t:'The angle of reflection is always 45°',fb:'Look at the readout again – r changed when you moved the slider.'},{t:'The angle of reflection is always double the angle of incidence',mis:'Confuses the angle between the rays with the angle of incidence',fb:'Double i is the angle between the two rays, not r.'},{t:'The angles are measured from the mirror',mis:'Measures angles from the mirror instead of the normal',fb:'Both angles are measured from the normal (the dashed line).'}]},
+ bp:{sc:'SC4',q:'PREDICT: At what angle must the top mirror be tilted so that light goes straight down the periscope tube?',opts:[{t:'45°',ok:1},{t:'30°',fb:'Test it and see!'},{t:'60°',fb:'Test it and see!'},{t:'90°',mis:'Unsure why periscope mirrors must be tilted at 45°',fb:'At 90° the mirror would stand upright and send the light back.'}]},
+ be:{sc:'SC3',q:'EXPLAIN: Why does a 45° mirror send the light straight down the tube?',hint:'i = r. Add the two angles together.',opts:[{t:'i = r = 45°, so the light is turned through 45° + 45° = 90°',ok:1},{t:'A 45° mirror absorbs less light',mis:'Thinks mirrors absorb light',fb:'Mirrors reflect light; they do not absorb it.'},{t:'Light always travels downwards',fb:'Light travels in straight lines in any direction – the mirror changes it.'},{t:'The light bends inside the glass',mis:'Thinks light passes through mirrors',fb:'The light reflects off the shiny surface.'}]}
+};
+function screenLab(){labPart('A');}
+function labPart(which){clear();setStep(4);const A=which==='A';
+ const c=el('div',{class:'card'});
+ c.innerHTML=`<h2>Level 3: Virtual Lab – Part ${A?'A: The law of reflection':'B: The periscope mirror angle'}</h2>
+ <p class="lead">${A?'Shine a torch at a plane mirror. Change the <b>angle of incidence</b> and measure the <b>angle of reflection</b>.':'Tilt the top mirror of a periscope. Find the angle that sends light from the parrot all the way to the eye.'}</p>
+ <div class="grid"><div><div class="tip"><b>Step 1 – Predict</b></div><div id="lq"></div><div id="lq2"></div></div>
+ <div id="lexp" class="locked"><div class="tip"><b>Step 2 – Test</b> ${A?'(move the slider to BOTH ends)':'(try BOTH ends, then find the angle that works)'}</div><div id="simbox"></div>
+ <label class="f" for="sl">${A?'Angle of incidence (i)':'Tilt of the top mirror'}</label><input type="range" id="sl" min="${A?10:25}" max="${A?80:65}" value="${A?30:32}" step="1">
+ <div class="readout" id="ro"></div><div class="checks" id="ck"></div>
+ <div class="row"><button class="btn" id="tested" disabled>I've tested it – Step 3: Explain ➜</button></div></div></div>`;
+ main.appendChild(c);
+ speak(A?'Virtual lab, part A. First, make a prediction.':'Virtual lab, part B. Make a prediction about the mirror angle.');
+ mcq($('#lq'),A?LABQ.ap:LABQ.bp,{title:'Your prediction',label:A?'Lab A: prediction':'Lab B: prediction',onDone:()=>{$('#lexp').classList.remove('locked');SFX.snap();}});
+ const sl=$('#sl');const lo=+sl.min,hi=+sl.max;let tLo=false,tHi=false,tOK=false;
+ const sim=A?lawSim():mirrorSim();$('#simbox').appendChild(sim.svg);
+ const upd=()=>{const v=+sl.value;if(v<=lo+3)tLo=true;if(v>=hi-3)tHi=true;const r=sim.draw(v);if(!A&&r)tOK=true;$('#ro').innerHTML=sim.read(v,r);
+  $('#ck').innerHTML=`<span class="${tLo?'yes':''}">${tLo?'☑':'☐'} Tried the smallest angle</span> &nbsp; <span class="${tHi?'yes':''}">${tHi?'☑':'☐'} Tried the biggest angle</span>`+(A?'':` &nbsp; <span class="${tOK?'yes':''}">${tOK?'☑':'☐'} Found the angle that works</span>`);
+  $('#tested').disabled=!(tLo&&tHi&&(A||tOK));};
+ sl.addEventListener('input',upd);upd();
+ $('#tested').onclick=()=>{$('#tested').disabled=true;sl.disabled=true;SFX.click();
+  mcq($('#lq2'),A?LABQ.ae:LABQ.be,{title:'Step 3 – Explain your results',label:A?'Lab A: explanation':'Lab B: explanation',onDone:()=>{
+   if(A){$('#lq2').insertAdjacentHTML('beforeend',`<div class="complete">✅ <b>Part A complete!</b> Part B is now unlocked.</div><div class="row"><button class="btn green" id="labNext">Unlock Part B ➜</button></div>`);$('#labNext').onclick=()=>labPart('B');}
+   else{levelDone($('#lq2'),'You found out why periscope mirrors are tilted at 45°.');}}});
+  $('#lq2').scrollIntoView({behavior:'smooth',block:'center'});};
+}
+function lawSim(){const svg=S_('svg',{viewBox:'0 0 440 280',class:'sim'});
+ S_('rect',{width:440,height:280,fill:'#fff'},svg);
+ const P={x:220,y:240};
+ for(let a=-90;a<=90;a+=10){const r1=150,r2=a%30===0?138:144,t=rad(a);S_('line',{x1:P.x+r1*Math.sin(t),y1:P.y-r1*Math.cos(t),x2:P.x+r2*Math.sin(t),y2:P.y-r2*Math.cos(t),stroke:'#b0bec5','stroke-width':1.5},svg);if(a%30===0&&a!==0)T_(svg,P.x+128*Math.sin(t),P.y-128*Math.cos(t)+4,Math.abs(a)+'°',{'text-anchor':'middle','font-size':10,fill:'#90a4ae'});}
+ S_('path',{d:`M ${P.x-150} ${P.y} A 150 150 0 0 1 ${P.x+150} ${P.y}`,fill:'none',stroke:'#cfd8dc','stroke-width':1.5},svg);
+ S_('rect',{x:30,y:242,width:380,height:14,fill:'url(#hatch)'},svg);S_('line',{x1:30,y1:240,x2:410,y2:240,stroke:'#4aa3dd','stroke-width':6,'stroke-linecap':'round'},svg);
+ S_('line',{x1:P.x,y1:P.y,x2:P.x,y2:20,stroke:'#5e35b1','stroke-width':2.5,'stroke-dasharray':'8 6'},svg);T_(svg,P.x+6,30,'normal',{'font-size':12,'font-weight':700,fill:'#5e35b1'});
+ T_(svg,405,272,'plane mirror',{'text-anchor':'end','font-size':12,'font-weight':700,fill:'#37474f'});
+ const g=S_('g',{},svg);
+ return {svg,draw(v){g.innerHTML='';const t=rad(v),L=190,A={x:P.x-L*Math.sin(t),y:P.y-L*Math.cos(t)},B={x:P.x+L*Math.sin(t),y:P.y-L*Math.cos(t)};
+   const aU=-Math.PI/2,aI=Math.atan2(A.y-P.y,A.x-P.x),aR=Math.atan2(B.y-P.y,B.x-P.x);
+   S_('path',{d:wedge(P.x,P.y,52,aU,aI,0),fill:'rgba(245,124,0,.25)',stroke:'#f57c00','stroke-width':2},g);S_('path',{d:wedge(P.x,P.y,52,aU,aR,1),fill:'rgba(94,53,177,.22)',stroke:'#5e35b1','stroke-width':2},g);
+   S_('line',{x1:A.x,y1:A.y,x2:P.x,y2:P.y,stroke:'#f9a825','stroke-width':5,'stroke-linecap':'round'},g);S_('line',{x1:P.x,y1:P.y,x2:B.x,y2:B.y,stroke:'#f9a825','stroke-width':5,'stroke-linecap':'round'},g);
+   arrow(g,(A.x+P.x)/2,(A.y+P.y)/2,Math.atan2(P.y-A.y,P.x-A.x),'#e65100');arrow(g,(B.x+P.x)/2,(B.y+P.y)/2,Math.atan2(B.y-P.y,B.x-P.x),'#e65100');
+   const tg=S_('g',{transform:`translate(${A.x} ${A.y}) rotate(${deg(Math.atan2(P.y-A.y,P.x-A.x))})`},g);S_('rect',{x:-26,y:-9,width:30,height:18,rx:4,fill:'#455a64'},tg);S_('rect',{x:2,y:-12,width:8,height:24,rx:2,fill:'#fff59d',stroke:'#f9a825'},tg);
+   T_(g,P.x+72*Math.cos((aU+aI)/2),P.y+72*Math.sin((aU+aI)/2)+5,'i = '+v+'°',{'text-anchor':'middle','font-size':14,'font-weight':800,fill:'#e65100'});
+   T_(g,P.x+72*Math.cos((aU+aR)/2),P.y+72*Math.sin((aU+aR)/2)+5,'r = '+v+'°',{'text-anchor':'middle','font-size':14,'font-weight':800,fill:'#4527a0'});
+   T_(g,(A.x+P.x)/2-12,(A.y+P.y)/2+22,'incident ray',{'text-anchor':'end','font-size':11,'font-weight':700,fill:'#37474f'});T_(g,(B.x+P.x)/2+12,(B.y+P.y)/2+22,'reflected ray',{'text-anchor':'start','font-size':11,'font-weight':700,fill:'#37474f'});
+   return true;},
+  read(v){return `Angle of incidence <b>i = ${v}°</b> &nbsp;·&nbsp; Angle of reflection <b>r = ${v}°</b> &nbsp;·&nbsp; Angle between the rays: <b>${2*v}°</b>`;}};}
+function mirrorSim(){const svg=S_('svg',{viewBox:'0 0 440 320',class:'sim'});
+ S_('rect',{width:440,height:320,fill:'url(#sky)'},svg);S_('rect',{y:300,width:440,height:20,fill:'#8bc34a'},svg);
+ drawParrot(svg,48,82,.7);S_('rect',{x:100,y:130,width:40,height:170,fill:'url(#bricks)',stroke:'#8f3a22'},svg);
+ S_('rect',{x:200,y:40,width:60,height:260,rx:6,fill:'#b2dfdb',stroke:'#00695c','stroke-width':3},svg);
+ S_('rect',{x:193,y:52,width:12,height:46,rx:3,fill:'#bfe9ff',stroke:'#ff9f1c','stroke-width':2.5},svg);S_('rect',{x:256,y:242,width:14,height:46,rx:3,fill:'#2d3748'},svg);
+ const bm=S_('g',{transform:'translate(230 265) rotate(45)'},svg);mirrorReal(bm,62,5);
+ S_('circle',{cx:322,cy:265,r:22,fill:'#f2c39b'},svg);S_('ellipse',{cx:306,cy:262,rx:3,ry:4,fill:'#1b2440'},svg);T_(svg,322,232,'Eye',{'text-anchor':'middle','font-size':12,'font-weight':700});
+ const tm=S_('g',{},svg);const g=S_('g',{},svg);
+ const segs=[[{x:205,y:44},{x:205,y:296}],[{x:255,y:44},{x:255,y:240}],[{x:255,y:290},{x:255,y:296}],[{x:205,y:44},{x:255,y:44}],[{x:205,y:296},{x:255,y:296}]];
+ const cr=(a,b)=>a.x*b.y-a.y*b.x;
+ function hit(o,d,a,b){const e={x:b.x-a.x,y:b.y-a.y},den=cr(d,e);if(Math.abs(den)<1e-9)return null;const ao={x:a.x-o.x,y:a.y-o.y},t=cr(ao,e)/den,s=cr(ao,d)/den;return t>1e-6&&s>=0&&s<=1?{t,x:o.x+t*d.x,y:o.y+t*d.y}:null;}
+ return {svg,draw(v){tm.innerHTML='';g.innerHTML='';const m=S_('g',{transform:`translate(230 75) rotate(${v+180})`},tm);mirrorReal(m,62,5);
+   T_(tm,268,30,'tilt = '+v+'°',{'text-anchor':'middle','font-size':13,'font-weight':800,fill:'#00695c'});
+   const pts=[[70,75],[230,75]];let d={x:Math.cos(rad(2*v)),y:Math.sin(rad(2*v))},o={x:230,y:75},ok=false;
+   const bmA={x:230-31*Math.SQRT1_2,y:265-31*Math.SQRT1_2},bmB={x:230+31*Math.SQRT1_2,y:265+31*Math.SQRT1_2};
+   let best=null;segs.forEach(([a,b])=>{const h=hit(o,d,a,b);if(h&&(!best||h.t<best.t))best={...h,w:'wall'};});
+   const hb=hit(o,d,bmA,bmB);if(hb&&(!best||hb.t<best.t))best={...hb,w:'mirror'};
+   if(best){pts.push([best.x,best.y]);
+    if(best.w==='mirror'){const u={x:Math.SQRT1_2,y:Math.SQRT1_2},dot=d.x*u.x+d.y*u.y,r={x:2*dot*u.x-d.x,y:2*dot*u.y-d.y};
+     const tEye=(306-best.x)/r.x;if(r.x>0){const ye=best.y+tEye*r.y;const yo=best.y+(255-best.x)/r.x*r.y;if(yo>242&&yo<288&&Math.abs(ye-262)<14){ok=true;pts.push([306,ye]);}else{const hh=hit(best,r,{x:255,y:44},{x:255,y:240})||hit(best,r,{x:205,y:296},{x:255,y:296});if(hh)pts.push([hh.x,hh.y]);else pts.push([best.x+r.x*60,best.y+r.y*60]);}}}}
+   S_('polyline',{points:pts.map(p=>p.join(',')).join(' '),fill:'none',stroke:ok?'#fbc02d':'#ff8f00','stroke-width':4,'stroke-linejoin':'round',filter:ok?'url(#glowY)':''},g);
+   const last=pts[pts.length-1];if(!ok)T_(g,last[0],last[1]+6,'✖',{'text-anchor':'middle','font-size':20,'font-weight':900,fill:'#c62828'});
+   return ok;},
+  read(v,ok){return `Top mirror tilt: <b>${v}°</b> &nbsp;·&nbsp; Light reaches the eye? <b style="color:${ok?'#2e7d32':'#c62828'}">${ok?'✅ Yes – you can see the parrot!':'❌ No – the light hits the side of the tube'}</b>`;}};}
+
+/* ============ ray tracing helpers ============ */
+const cross=(a,b)=>a.x*b.y-a.y*b.x;
+function raySeg(o,d,a,b){const e={x:b.x-a.x,y:b.y-a.y},den=cross(d,e);if(Math.abs(den)<1e-9)return null;const ao={x:a.x-o.x,y:a.y-o.y},t=cross(ao,e)/den,s=cross(ao,d)/den;return t>1e-6&&s>=0&&s<=1?{t,x:o.x+t*d.x,y:o.y+t*d.y}:null;}
+function rectSegs(r){const{x,y,w,h}=r;return [[{x,y},{x:x+w,y}],[{x:x+w,y},{x:x+w,y:y+h}],[{x,y:y+h},{x:x+w,y:y+h}],[{x,y},{x,y:y+h}]];}
+function drawPerson(g,x,y,shirt,hair,opt={}){const p=S_('g',{transform:`translate(${x} ${y})`},g);if(!opt.headOnly)S_('rect',{x:-26,y:22,width:52,height:70,rx:20,fill:shirt},p);
+ S_('circle',{r:24,fill:opt.skin||'#e8b98f'},p);S_('path',{d:'M -25 -4 Q -24 -30 0 -30 Q 24 -30 25 -4 Q 14 -18 0 -18 Q -14 -18 -25 -4 Z',fill:hair},p);
+ S_('circle',{cx:-8,cy:0,r:3,fill:'#1b2440'},p);S_('circle',{cx:8,cy:0,r:3,fill:'#1b2440'},p);return S_('path',{d:'M -8 12 Q 0 7 8 12',stroke:'#7a3b2e','stroke-width':3,fill:'none','stroke-linecap':'round'},p);}
+
+/* ============ SCREEN 5: apply (A dining table, B tent puzzle) ============ */
+function screenApply(){applyA();}
+function applyA(){clear();setStep(5);
+ const g=el('div',{class:'grid wide'});const left=el('div',{class:'card wrapR'});const panel=el('div',{class:'card'});g.append(left,panel);main.appendChild(g);
+ panel.innerHTML=`<h2>Level 4: Apply – Part A: Light the dining table</h2>
+  <div class="info">Your family is sitting down for dinner, but the ceiling light is broken and the table is dark! Use a <b>plane mirror</b> to direct the lamp's light onto the table.</div>
+  <div class="checks" id="aCk"></div>
+  <div class="row"><button class="btn" id="lamp">💡 Turn ON the lamp</button></div>
+  <div class="row"><button class="btn light" id="rl">⟲ 5°</button><button class="btn light" id="rr">⟳ 5°</button></div>
+  <div class="readout" id="ang">Angle of incidence: – · Angle of reflection: –</div>
+  <div class="row"><button class="btn green" id="chk" disabled>✔ Check my light</button></div>
+  <div class="msg" id="aMsg"></div><div class="stat" id="aStat"></div><div id="aNext"></div>`;
+ speak('Level 4, part A. The dining table is dark. Turn on the lamp, then drag and rotate the mirror to reflect the light onto the table.');
+ const svg=S_('svg',{viewBox:'0 0 1000 580',class:'sim'});left.appendChild(svg);
+ S_('rect',{width:1000,height:470,fill:'#e9d8c3'},svg);S_('rect',{y:470,width:1000,height:110,fill:'url(#wood)'},svg);S_('rect',{y:462,width:1000,height:10,fill:'#6b4426'},svg);
+ S_('rect',{x:330,y:60,width:150,height:110,rx:6,fill:'#7cc6ff',stroke:'#8a5a36','stroke-width':10},svg);S_('path',{d:'M 340 160 L 380 110 L 410 140 L 440 100 L 470 160 Z',fill:'#4caf50'},svg);
+ S_('line',{x1:730,y1:0,x2:730,y2:60,stroke:'#444','stroke-width':3},svg);S_('path',{d:'M 700 60 L 760 60 L 748 84 L 712 84 Z',fill:'#7d8aa8'},svg);T_(svg,770,80,'broken light',{'font-size':15,'font-weight':700,fill:'#7a2e2e'});
+ const mouths=[];const fam=S_('g',{},svg);
+ mouths.push(drawPerson(fam,690,368,'#ff6b6b','#3b2a1a',{headOnly:true}));mouths.push(drawPerson(fam,790,364,'#3fa9f5','#1b1b1b',{headOnly:true,skin:'#c98e64'}));
+ S_('rect',{x:528,y:408,width:44,height:62,rx:6,fill:'#8a5a36'},fam);mouths.push(drawPerson(fam,560,360,'#2e7d32','#5b3a1e'));
+ S_('rect',{x:888,y:408,width:44,height:62,rx:6,fill:'#8a5a36'},fam);mouths.push(drawPerson(fam,900,360,'#5e35b1','#a0522d',{skin:'#f2c39b'}));
+ S_('rect',{x:590,y:432,width:280,height:14,rx:4,fill:'#a0673d'},fam);S_('path',{d:'M 590 440 L 870 440 L 860 470 L 600 470 Z',fill:'#fff',opacity:.9},fam);
+ const food=S_('g',{opacity:.3},fam);[[640,'🍗'],[700,'🍝'],[760,'🥗'],[820,'🍞']].forEach(([x,e])=>{S_('ellipse',{cx:x,cy:430,rx:22,ry:6,fill:'#fff',stroke:'#ccc'},food);T_(food,x,428,e,{'text-anchor':'middle','font-size':24});});
+ const shade=S_('rect',{width:1000,height:580,fill:'#0a0f24',opacity:.65},svg);
+ const tglow=S_('ellipse',{cx:730,cy:420,rx:200,ry:90,fill:'url(#tableGlow)',opacity:0},svg);
+ const O={x:96,y:134},DA=8,d={x:Math.cos(rad(DA)),y:Math.sin(rad(DA))};
+ S_('rect',{y:110,width:18,height:50,fill:'#555'},svg);S_('line',{x1:18,y1:134,x2:52,y2:134,stroke:'#666','stroke-width':6},svg);
+ const lampG=S_('g',{transform:`translate(70 134) rotate(${DA})`},svg);S_('path',{d:'M -22 -18 L 18 -24 L 18 24 L -22 18 Z',fill:'#c9d1e0',stroke:'#5b6680','stroke-width':3},lampG);const bulb=S_('ellipse',{cx:22,rx:6,ry:22,fill:'#888'},lampG);
+ T_(svg,62,190,'LAMP',{'text-anchor':'middle','font-size':15,'font-weight':800,fill:'#ffe066'});
+ const beamL=S_('g',{},svg);
+ const M={x:330,y:360,a:0,len:104};const mg=S_('g',{style:'cursor:grab'},svg);
+ S_('rect',{x:-52,y:0,width:104,height:8,rx:2,fill:'#4a5568'},mg);S_('rect',{x:-52,y:-6,width:104,height:6,rx:2,fill:'url(#silver)',stroke:'#6aa7cf','stroke-width':1.5},mg);
+ const mhit=S_('rect',{x:-56,y:-22,width:112,height:40,fill:'transparent'},mg);S_('line',{x1:52,y1:0,x2:70,y2:0,stroke:'#5e35b1','stroke-width':3},mg);
+ const handle=S_('g',{style:'cursor:alias'},mg);S_('circle',{cx:80,r:15,fill:'#5e35b1',stroke:'#fff','stroke-width':3},handle);T_(handle,80,6,'⟳',{'text-anchor':'middle','font-size':16,fill:'#fff','font-weight':900});
+ const mlab=T_(svg,0,0,'MIRROR – drag me',{'text-anchor':'middle','font-size':14,'font-weight':800,fill:'#fff'});
+ let on=false,done=false,attempts=0,last=null;const t0=Date.now();
+ const tmr=setInterval(()=>{if(!done)$('#aStat').innerHTML=`Attempts: <b>${attempts}</b> · Time: <b>${fmtT((Date.now()-t0)/1000)}</b>`;},1000);onClean(()=>clearInterval(tmr));
+ $('#lamp').onclick=()=>{if(done)return;on=!on;SFX.click();$('#lamp').textContent=on?'💡 Lamp is ON':'💡 Turn ON the lamp';$('#lamp').classList.toggle('on',on);$('#chk').disabled=!on;update();if(on)speak('The lamp is on. Now drag the mirror into the beam.');};
+ $('#rl').onclick=()=>{if(!done){M.a=normDeg(M.a-5);update();}};$('#rr').onclick=()=>{if(!done){M.a=normDeg(M.a+5);update();}};
+ let sx,sy;svgDrag(svg,mhit,{start:()=>{if(done)return false;sx=M.x;sy=M.y;},move:(dx,dy)=>{M.x=clamp(sx+dx,110,960);M.y=clamp(sy+dy,40,410);update();}});
+ svgDrag(svg,handle,{start:()=>{if(done)return false;},move:(dx,dy,p)=>{M.a=normDeg(Math.round(deg(Math.atan2(p.y-M.y,p.x-M.x))));update();}});
+ const SEGS=[['table',{x:590,y:432},{x:870,y:432}],['ceiling',{x:0,y:0},{x:1000,y:0}],['floor',{x:0,y:470},{x:1000,y:470}],['left wall',{x:0,y:0},{x:0,y:470}],['right wall',{x:1000,y:0},{x:1000,y:470}]];
+ const firstHit=(o,dd)=>{let b=null;SEGS.forEach(([n,a,c])=>{const h=raySeg(o,dd,a,c);if(h&&(!b||h.t<b.t))b={...h,what:n};});return b;};
+ function trace(){const ca=Math.cos(rad(M.a)),sa=Math.sin(rad(M.a));const m1={x:M.x-ca*M.len/2,y:M.y-sa*M.len/2},m2={x:M.x+ca*M.len/2,y:M.y+sa*M.len/2},n={x:sa,y:-ca};
+  const w=firstHit(O,d),hm=raySeg(O,d,m1,m2);if(!hm||hm.t>w.t)return {path:[O,w],status:'nomirror',end:w};
+  const dn=d.x*n.x+d.y*n.y;if(dn>=0)return {path:[O,hm],status:'back',H:hm};
+  const r={x:d.x-2*dn*n.x,y:d.y-2*dn*n.y},e=firstHit(hm,r);return {path:[O,hm,e],status:e.what==='table'?'table':'miss',H:hm,end:e,n,r,ang:Math.round(deg(Math.acos(clamp(-dn,-1,1))))};}
+ function update(){mg.setAttribute('transform',`translate(${M.x} ${M.y}) rotate(${M.a})`);mlab.setAttribute('x',M.x);mlab.setAttribute('y',M.y+46);
+  beamL.innerHTML='';shade.setAttribute('opacity',done?.12:on?.45:.65);bulb.setAttribute('fill',on?'#fff6a8':'#888');
+  if(!on){last=null;$('#ang').innerHTML='Angle of incidence: – · Angle of reflection: –';tglow.setAttribute('opacity',0);ck();return;}
+  const tr=trace();last=tr;const pts=tr.path.map(p=>`${p.x},${p.y}`).join(' ');
+  S_('polyline',{points:pts,fill:'none',stroke:'#ffe066','stroke-width':24,opacity:.25,'stroke-linejoin':'round'},beamL);
+  S_('polyline',{points:pts,fill:'none',stroke:'#fff3a0','stroke-width':5,'stroke-linejoin':'round',filter:'url(#glowY)'},beamL);
+  for(let k=0;k<tr.path.length-1;k++){const a=tr.path[k],b=tr.path[k+1];if(Math.hypot(b.x-a.x,b.y-a.y)>60)arrow(beamL,(a.x+b.x)/2,(a.y+b.y)/2,Math.atan2(b.y-a.y,b.x-a.x),'#ffb000',12);}
+  if(tr.n){const H=tr.H,n=tr.n;S_('line',{x1:H.x,y1:H.y,x2:H.x+n.x*95,y2:H.y+n.y*95,stroke:'#d1c4e9','stroke-width':3,'stroke-dasharray':'8 6'},beamL);
+   const an=Math.atan2(n.y,n.x),ai=Math.atan2(-d.y,-d.x),ar=Math.atan2(tr.r.y,tr.r.x),sw=v=>cross(n,v)>0?1:0;
+   S_('path',{d:wedge(H.x,H.y,44,an,ai,sw({x:-d.x,y:-d.y})),fill:'rgba(255,159,28,.4)',stroke:'#ff9f1c','stroke-width':2},beamL);S_('path',{d:wedge(H.x,H.y,44,an,ar,sw(tr.r)),fill:'rgba(179,157,219,.45)',stroke:'#b39ddb','stroke-width':2},beamL);
+   $('#ang').innerHTML=`Angle of incidence: <b>${tr.ang}°</b> · Angle of reflection: <b>${tr.ang}°</b> <span class="tip">(always equal!)</span>`;}
+  else $('#ang').innerHTML='Angle of incidence: – · Angle of reflection: –';
+  mlab.style.display=tr.n||done?'none':'';tglow.setAttribute('opacity',tr.status==='table'?.55:0);ck();}
+ function ck(){const tr=last;$('#aCk').innerHTML=[[on,'Lamp is ON'],[tr&&tr.n,'Mirror is in the beam'],[tr&&tr.status==='table','Light lands on the table']].map(([v,t])=>`<span class="${v?'yes':''}">${v?'☑':'☐'} ${t}</span>`).join(' &nbsp; ');}
+ function ideal(H){const T={x:730,y:432};let o={x:T.x-H.x,y:T.y-H.y};const l=Math.hypot(o.x,o.y);o={x:o.x/l,y:o.y/l};let n={x:o.x-d.x,y:o.y-d.y};const nl=Math.hypot(n.x,n.y);return normDeg(deg(Math.atan2(n.x/nl,-n.y/nl)));}
+ const am=(t,c)=>{$('#aMsg').className='msg '+c;$('#aMsg').innerHTML=t;};
+ $('#chk').onclick=()=>{if(done||!on)return;attempts++;const tr=last||trace();
+  if(tr.status==='table'){done=true;const tm=(Date.now()-t0)/1000;SFX.fanfare();update();tglow.setAttribute('opacity',1);food.setAttribute('opacity',1);mouths.forEach(m=>m.setAttribute('d','M -10 9 Q 0 20 10 9'));
+   left.appendChild(el('div',{class:'banner',style:'top:18%;left:70%'},'🍽️ Table lit!<small>The family can see their dinner</small>'));
+   am(`✅ The light hit the mirror at <b>i = ${tr.ang}°</b> and reflected at <b>r = ${tr.ang}°</b>. Because i = r, turning the mirror let you aim the light exactly where you wanted it.`,'good');speak('Brilliant! The table is lit. Because the angle of incidence equals the angle of reflection, you could aim the light.');
+   record('SC3',attempts===1,'Apply A: light the dining table');Object.assign(lvData(),{tableAttempts:attempts,tableTime:Math.round(tm)});save();
+   panel.querySelectorAll('button').forEach(b=>b.disabled=true);
+   $('#aNext').innerHTML=`<div class="complete">✅ <b>Part A complete!</b> Part B is now unlocked.</div><div class="row"><button class="btn green" id="toB">Unlock Part B: Mirror Challenge ➜</button></div>`;$('#toB').onclick=applyB;return;}
+  SFX.wrong();let h;
+  if(tr.status==='nomirror')h='The light is not hitting the mirror yet. 💡 <b>Drag the mirror into the yellow beam.</b>';
+  else if(tr.status==='back'){h='The light is hitting the <b>back</b> of the mirror, so nothing is reflected. 💡 Rotate the mirror so the <b>shiny side faces the lamp</b>.';misc('Thinks either side of a mirror reflects light (the shiny side must face the light)');}
+  else{const where=tr.end.what==='floor'?(tr.end.x<590?'on the floor, LEFT of the table':'on the floor, RIGHT of the table'):'on the '+tr.end.what;const diff=((ideal(tr.H)-M.a+540)%360)-180;
+   h=`The reflected light lands <b>${where}</b>. Remember <b>i = r</b>: the normal (dashed line) should point halfway between the lamp and the table. 💡 Try turning the mirror a little <b>${diff>0?'⟳ clockwise':'⟲ anticlockwise'}</b>.`;}
+  useHint();am('❌ Not yet – good experimenting! '+h,'bad');};
+ update();
+}
+const TENT=[
+ {torch:{x:40,y:300},mir:[{x:300,y:300,a:0,t:135}],tent:{x:268,y:60,w:64,h:56},obs:[],intro:'Rotate the mirror so the torch light shines on the tent.'},
+ {torch:{x:40,y:330},mir:[{x:200,y:330,a:0,t:135},{x:200,y:110,a:90,t:135}],tent:{x:480,y:82,w:64,h:56},obs:[{x:330,y:150,w:60,h:250}],intro:'A tree is in the way! Use TWO mirrors to get the light around it.'},
+ {torch:{x:40,y:80},mir:[{x:180,y:80,a:90,t:45},{x:180,y:320,a:0,t:45},{x:430,y:320,a:90,t:135}],tent:{x:398,y:70,w:64,h:56},obs:[{x:260,y:30,w:60,h:220}],intro:'Three mirrors this time. Guide the light around the tree to the tent.'}];
+function applyB(){clear();setStep(5);
+ const g=el('div',{class:'grid wide'});const left=el('div',{class:'card wrapR'});const panel=el('div',{class:'card'});g.append(left,panel);main.appendChild(g);
+ panel.innerHTML=`<h2>Level 4: Apply – Part B: Mirror Challenge</h2><div class="info" id="tInfo"></div><div class="chain" id="tChain"></div><div class="msg" id="tMsg"></div><div class="stat" id="tStat"></div><div id="tNext"></div>
+  <p class="tip">These mirrors are shiny on <b>both sides</b>. Click (or tap) a mirror to turn it 45°.</p>`;
+ const svg=S_('svg',{viewBox:'0 0 600 400',class:'sim'});left.appendChild(svg);
+ let stage=0,rots=0,stRots=0,t0=Date.now(),solved=false;const res=[];
+ const tmr=setInterval(()=>{$('#tStat').innerHTML=`Stage <b>${stage+1} of 3</b> · Mirror turns: <b>${stRots}</b> · Time: <b>${fmtT((Date.now()-t0)/1000)}</b>`;},500);onClean(()=>clearInterval(tmr));
+ speak('Part B. The mirror challenge. Click the mirrors to turn them, and bounce the torch light onto the tent.');
+ function load(){solved=false;stRots=0;const L=TENT[stage];L.cur=L.mir.map(m=>m.a);$('#tInfo').innerHTML=`<b>Stage ${stage+1} of 3:</b> ${L.intro}`;$('#tMsg').className='msg';$('#tMsg').innerHTML='';$('#tNext').innerHTML='';
+  $('#tChain').innerHTML=[0,1,2].map(i=>`<span class="${i<stage?'':'q'}">${i<stage?'✓ ':''}Stage ${i+1}</span>`).join(' → ');render();}
+ function render(){const L=TENT[stage];svg.innerHTML='';
+  S_('rect',{width:600,height:400,fill:'#14213d'},svg);for(let i=0;i<40;i++)S_('circle',{cx:(i*137)%600,cy:(i*61)%180,r:1.2,fill:'#fff',opacity:.7},svg);
+  S_('rect',{y:360,width:600,height:40,fill:'#2d4a22'},svg);
+  L.obs.forEach(o=>{S_('rect',{x:o.x+o.w/2-10,y:o.y+o.h*.45,width:20,height:o.h*.55+40,fill:'#5d4037'},svg);S_('ellipse',{cx:o.x+o.w/2,cy:o.y+o.h*.35,rx:o.w*.9,ry:o.h*.42,fill:'#2e7d32'},svg);});
+  const tn=L.tent;const lit=solved;S_('path',{d:`M ${tn.x} ${tn.y+tn.h} L ${tn.x+tn.w/2} ${tn.y} L ${tn.x+tn.w} ${tn.y+tn.h} Z`,fill:lit?'#ffcc80':'#8d6e63',stroke:'#3e2723','stroke-width':2},svg);S_('path',{d:`M ${tn.x+tn.w/2} ${tn.y+18} L ${tn.x+tn.w/2-9} ${tn.y+tn.h} L ${tn.x+tn.w/2+9} ${tn.y+tn.h} Z`,fill:'#3e2723'},svg);T_(svg,tn.x+tn.w/2,tn.y+tn.h+16,'TENT',{'text-anchor':'middle','font-size':12,'font-weight':800,fill:'#ffe0b2'});
+  const tg=S_('g',{transform:`translate(${L.torch.x} ${L.torch.y})`},svg);S_('rect',{x:-30,y:-9,width:30,height:18,rx:4,fill:'#90a4ae'},tg);S_('rect',{x:-2,y:-12,width:8,height:24,rx:2,fill:'#fff59d'},tg);T_(svg,L.torch.x-14,L.torch.y+28,'torch',{'text-anchor':'middle','font-size':11,fill:'#cfd8dc'});
+  // trace
+  let o={...L.torch},dd={x:1,y:0};const pts=[[o.x,o.y]];let hitTent=false,last=null;
+  for(let b=0;b<8;b++){let best=null;
+   L.mir.forEach((m,i)=>{if(i===last)return;const a=rad(L.cur[i]),u={x:Math.cos(a),y:Math.sin(a)},h=raySeg(o,dd,{x:m.x-u.x*28,y:m.y-u.y*28},{x:m.x+u.x*28,y:m.y+u.y*28});if(h&&(!best||h.t<best.t))best={...h,k:'m',i,u};});
+   L.obs.forEach(r=>rectSegs({x:r.x-r.w*.4,y:r.y,w:r.w*1.8,h:r.h}).forEach(([a,c])=>{const h=raySeg(o,dd,a,c);if(h&&(!best||h.t<best.t))best={...h,k:'obs'};}));
+   rectSegs(L.tent).forEach(([a,c])=>{const h=raySeg(o,dd,a,c);if(h&&(!best||h.t<best.t))best={...h,k:'tent'};});
+   rectSegs({x:0,y:0,w:600,h:360}).forEach(([a,c])=>{const h=raySeg(o,dd,a,c);if(h&&(!best||h.t<best.t))best={...h,k:'edge'};});
+   if(!best)break;pts.push([best.x,best.y]);
+   if(best.k==='m'){const dt=dd.x*best.u.x+dd.y*best.u.y;dd={x:2*dt*best.u.x-dd.x,y:2*dt*best.u.y-dd.y};o={x:best.x,y:best.y};last=best.i;continue;}
+   if(best.k==='tent')hitTent=true;break;}
+  const P=pts.map(p=>p.join(',')).join(' ');S_('polyline',{points:P,fill:'none',stroke:'#ffe066','stroke-width':16,opacity:.25,'stroke-linejoin':'round'},svg);S_('polyline',{points:P,fill:'none',stroke:'#fff59d','stroke-width':4,'stroke-linejoin':'round',filter:'url(#glowY)'},svg);
+  L.mir.forEach((m,i)=>{const mg=S_('g',{transform:`translate(${m.x} ${m.y})`,style:'cursor:pointer'},svg);S_('circle',{r:32,fill:'rgba(255,255,255,.08)',stroke:'rgba(255,255,255,.35)','stroke-dasharray':'4 4'},mg);
+   const r=S_('g',{transform:`rotate(${L.cur[i]})`},mg);S_('rect',{x:-28,y:-4,width:56,height:8,rx:2,fill:'url(#silver)',stroke:'#90caf9','stroke-width':1.5},r);
+   S_('circle',{r:4,fill:'#5e35b1'},mg);T_(mg,0,46,'mirror '+(i+1),{'text-anchor':'middle','font-size':11,fill:'#e3f2fd'});
+   mg.addEventListener('click',()=>{if(solved)return;L.cur[i]=normDeg(L.cur[i]+45)%180;rots++;stRots++;SFX.click2();render();});});
+  if(hitTent&&!solved){solved=true;render();win();}}
+ function win(){const L=TENT[stage];const opt=L.mir.reduce((a,m)=>a+((((m.t-m.a)/45)%4)+4)%4,0);const good=stRots<=opt+2;res.push({stage:stage+1,turns:stRots,opt});
+  record('SC3',good,`Apply B: mirror challenge stage ${stage+1}`);SFX.fanfare();
+  $('#tMsg').className='msg good';$('#tMsg').innerHTML=`✅ The tent is lit! You used <b>${stRots}</b> mirror turns (the fewest possible was ${opt}). Each mirror changed the direction of the light by reflection.`;
+  speak('The tent is lit! Each mirror changed the direction of the light.');
+  if(stage<2){$('#tNext').innerHTML=`<div class="row"><button class="btn green" id="nxS">Unlock Stage ${stage+2} ➜</button></div>`;$('#nxS').onclick=()=>{stage++;load();};}
+  else{Object.assign(lvData(),{tent:res,tentTurns:rots,tentTime:Math.round((Date.now()-t0)/1000)});save();levelDone($('#tNext'),'You used mirrors to send light exactly where you wanted it.');}}
+ load();
+}
+
+/* ============ SCREEN 6: trench periscope ============ */
+function screenTrench(){
+ const intro=el('div',{class:'card'});intro.innerHTML=`<h2>Level 5: Trench Periscope (World War I)</h2>
+  <div class="info">📜 <b>History:</b> In World War I (1914–1918), soldiers lived in deep trenches. Looking over the top was dangerous, so they used <b>periscopes</b> to see over the trench wall while staying safely below it.</div>
+  <p><b>Your mission:</b> a scout is hiding somewhere outside your trench. Raise your periscope, search left and right, and lock onto the scout's helmet.</p><div class="row"><button class="btn green" id="tStart">Start the search ➜</button></div>`;
+ main.appendChild(intro);speak('Level 5. Trench periscope. Raise your periscope, search left and right, and find the hidden scout.');
+ $('#tStart').onclick=()=>{intro.remove();run();};
+ function run(){
+ const g=el('div',{class:'grid wide'});const left=el('div',{class:'card wrapR'});const panel=el('div',{class:'card'});g.append(left,panel);main.appendChild(g);
+ const svg=S_('svg',{viewBox:'0 0 640 420',class:'sim'});left.appendChild(svg);
+ S_('rect',{width:640,height:90,fill:'url(#armySky)'},svg);S_('rect',{y:80,width:640,height:230,fill:'#7a6a4a'},svg);
+ for(let r=0;r<7;r++)for(let c=-1;c<10;c++){const x=c*72+(r%2?36:0),y=80+r*32;S_('rect',{x:x+2,y,width:68,height:31,rx:13,fill:r%3===0?'#b89f6e':'#c2a979',stroke:'#8c7448','stroke-width':2},svg);}
+ T_(svg,14,74,'▼ TRENCH WALL (parapet)',{'font-size':13,'font-weight':800,fill:'#3c3424'});
+ S_('rect',{y:304,width:640,height:62,fill:'url(#wood)'},svg);for(let x=0;x<640;x+=40)S_('rect',{x,y:366,width:36,height:54,fill:'#6e5233',stroke:'#4b3620'},svg);
+ const per=S_('g',{style:'cursor:grab'},svg);const upg=S_('g',{},per);
+ S_('rect',{x:-19,y:130,width:38,height:200,rx:4,fill:'#6b7d52',stroke:'#3b4630','stroke-width':3},upg);S_('rect',{x:-21,y:126,width:42,height:12,rx:3,fill:'#56653f'},upg);
+ S_('rect',{x:-16,y:230,width:32,height:100,rx:4,fill:'#5b6b45',stroke:'#3b4630','stroke-width':3},per);S_('rect',{x:-12,y:296,width:24,height:18,rx:4,fill:'#1a1a1a'},per);
+ S_('path',{d:'M -55 420 Q -50 372 0 368 Q 50 372 55 420 Z',fill:'#7a6a45'},per);S_('circle',{cy:350,r:23,fill:'#6b4a2b'},per);S_('ellipse',{cy:336,rx:40,ry:9,fill:'#4e5a3c'},per);S_('path',{d:'M -25 336 Q 0 300 25 336 Z',fill:'#5d6b47'},per);
+ const perHit=S_('rect',{x:-45,y:120,width:90,height:300,fill:'transparent'},per);const peekG=S_('g',{},svg);
+ const BX=[230,500,760,1020,1300,1540,1800,2060],order=[2,3,4,5,6,7],ti=order[Math.floor(Math.random()*6)],ri=order.filter(k=>k!==ti)[Math.floor(Math.random()*5)],TX=BX[ti],RX=BX[ri];
+ panel.innerHTML=`<h2>Periscope view</h2><svg class="eyeview" viewBox="0 0 320 320"></svg>
+  <div class="row"><button class="btn" id="sl">◀ Left</button><button class="btn" id="sr">Right ▶</button></div>
+  <div class="row"><button class="btn" id="rs">⬆ Raise periscope</button><button class="btn red" id="lk">🎯 Lock on</button></div>
+  <div class="row"><button class="btn light" id="pk">🧗 Look over the wall</button></div>
+  <div class="tip"><b>How the light travels:</b></div><svg id="side" viewBox="0 0 320 190" class="sim" style="background:#eef3f7"></svg>
+  <div class="msg" id="kMsg"></div><div class="stat" id="kStat"></div><div id="kQ"></div>`;
+ const ev=panel.querySelector('.eyeview'),side=$('#side');
+ S_('circle',{cx:160,cy:160,r:150,fill:'#0b1020'},ev);const cp=S_('clipPath',{id:'ec5'},ev);S_('circle',{cx:160,cy:160,r:140},cp);const clipG=S_('g',{'clip-path':'url(#ec5)'},ev);
+ const pano=S_('g',{},clipG);
+ (function(g){S_('rect',{width:2400,height:330,fill:'url(#armySky)'},g);for(let k=0;k<9;k++)S_('ellipse',{cx:120+k*280,cy:80+(k%3)*30,rx:90,ry:22,fill:'#f2f4f6',opacity:.85},g);
+  S_('path',{d:'M 0 300 Q 300 230 600 290 T 1200 280 T 1800 285 T 2400 280 L 2400 340 L 0 340 Z',fill:'#8a9a7b'},g);S_('rect',{y:330,width:2400,height:270,fill:'#7d7a4f'},g);
+  for(let k=0;k<14;k++)S_('ellipse',{cx:90+k*175,cy:470+(k%3)*40,rx:70,ry:16,fill:'#5e5434',opacity:.7},g);
+  [420,1250,2050].forEach(x=>{S_('path',{d:`M ${x-14} 400 L ${x-8} 210 L ${x+4} 190 L ${x+10} 240 L ${x+16} 400 Z`,fill:'#4a3a28'},g);});
+  S_('path',{d:'M 1560 400 L 1560 250 L 1640 200 L 1700 250 L 1700 400 Z M 1600 300 h 30 v 40 h -30 Z',fill:'#9a9a90','fill-rule':'evenodd'},g);
+  for(let x=60;x<2400;x+=150)S_('rect',{x,y:400,width:7,height:60,fill:'#4a3a28'},g);let w='';for(let x=60;x<2400;x+=25)w+=`${x},${(x/25)%2?412:428} `;S_('polyline',{points:w,fill:'none',stroke:'#3a3a3a','stroke-width':2},g);
+  const tg=S_('g',{transform:`translate(${TX} 280)`},g);S_('circle',{cy:8,r:17,fill:'#e2bf95'},tg);S_('path',{d:'M -24 4 Q -22 -24 0 -26 Q 22 -24 24 4 Z',fill:'#5a6248'},tg);S_('rect',{x:-26,width:52,height:6,rx:3,fill:'#454c37'},tg);S_('rect',{x:-15,y:8,width:12,height:10,rx:3,fill:'#111'},tg);S_('rect',{x:3,y:8,width:12,height:10,rx:3,fill:'#111'},tg);
+  const rb=S_('g',{transform:`translate(${RX+60} 360)`},g);S_('ellipse',{cx:-6,cy:-26,rx:5,ry:16,fill:'#9a8f86'},rb);S_('ellipse',{cx:6,cy:-26,rx:5,ry:16,fill:'#9a8f86'},rb);S_('circle',{cy:-4,r:13,fill:'#a89d93'},rb);
+  BX.forEach(x=>[[-50,20,44],[-10,0,52],[34,18,46],[60,34,34],[-70,38,30]].forEach(([dx,dy,r])=>S_('circle',{cx:x+dx,cy:340+dy,r,fill:dx%20?'#4f6b3a':'#5a7a42'},g)));})(pano);
+ const bags=S_('g',{},clipG);S_('rect',{width:320,height:320,fill:'#7a6a4a'},bags);for(let r=0;r<4;r++)for(let c=-1;c<3;c++)S_('rect',{x:c*150+(r%2?75:0)+4,y:r*82+4,width:142,height:76,rx:32,fill:'#c2a979',stroke:'#8c7448','stroke-width':4},bags);T_(bags,160,170,'Sandbags only…',{'text-anchor':'middle','font-size':24,'font-weight':800,fill:'#3c3424'});
+ S_('circle',{cx:160,cy:160,r:140,fill:'url(#vignette)'},ev);const ch=S_('g',{opacity:.85},ev);S_('circle',{cx:160,cy:160,r:30,fill:'none',stroke:'#ff3b3b','stroke-width':2.5},ch);[[160,20,160,128],[160,192,160,300],[20,160,128,160],[192,160,300,160]].forEach(([a,b,c,dd])=>S_('line',{x1:a,y1:b,x2:c,y2:dd,stroke:'#ff3b3b','stroke-width':2},ch));
+ S_('circle',{cx:160,cy:160,r:145,fill:'none',stroke:'#2d3748','stroke-width':12},ev);const flash=T_(ev,160,80,'',{'text-anchor':'middle','font-size':24,'font-weight':900,fill:'#ffe066',stroke:'#000','stroke-width':1});
+ let px=90,raised=false,anim=false,found=false,wrong=0,low=0,peeks=0;const t0=Date.now();
+ const tmr=setInterval(()=>{if(!found)$('#kStat').innerHTML=`Wrong lock-ons: <b>${wrong}</b> · Time: <b>${fmtT((Date.now()-t0)/1000)}</b>`;},1000);onClean(()=>clearInterval(tmr));
+ const cxOf=()=>150+(px-60)/520*2100;
+ const km=(t,c)=>{$('#kMsg').className='msg '+c;$('#kMsg').innerHTML=t;};
+ function redrawSide(){side.innerHTML='';S_('rect',{width:320,height:110,fill:'#d6e2ec'},side);S_('rect',{y:110,width:320,height:80,fill:'#8b7b55'},side);S_('rect',{x:150,y:110,width:150,height:80,fill:'#5e5038'},side);
+  S_('rect',{x:118,y:80,width:40,height:30,rx:8,fill:'#c2a979',stroke:'#8c7448'},side);T_(side,30,94,'🪖',{'font-size':22,'text-anchor':'middle'});T_(side,30,122,'scout',{'font-size':11,'font-weight':700,'text-anchor':'middle'});
+  const top=raised?40:96;S_('rect',{x:182,y:top,width:24,height:180-top,fill:'#6b7d52',stroke:'#3b4630','stroke-width':2},side);
+  const m1=S_('g',{transform:`translate(194 ${top+12}) rotate(225)`},side);mirrorReal(m1,30,4);const m2=S_('g',{transform:'translate(194 168) rotate(45)'},side);mirrorReal(m2,30,4);T_(side,222,174,'👁️',{'font-size':18});
+  if(raised)S_('polyline',{points:`40,${top+12} 194,${top+12} 194,168 220,168`,fill:'none',stroke:'#fbc02d','stroke-width':4,'stroke-dasharray':'10 6'},side);
+  else{S_('polyline',{points:`40,${top+12} 118,${top+12}`,fill:'none',stroke:'#fbc02d','stroke-width':4},side);T_(side,122,top+18,'✖',{'font-size':18,fill:'#c62828','font-weight':900});}
+  T_(side,160,16,raised?'Light: scout → top mirror → bottom mirror → eye':'The trench wall blocks the light!',{'text-anchor':'middle','font-size':12,'font-weight':800,fill:'#1d2433'});}
+ function upd(){per.setAttribute('transform',`translate(${px} 0)`);bags.style.display=raised?'none':'';pano.setAttribute('transform',`translate(${160-cxOf()} -170)`);}
+ function setRaise(v){if(anim)return;anim=true;const a=raised?-110:0,b=v?-110:0;raised=v;animateVal(500,e=>upg.setAttribute('transform',`translate(0 ${a+(b-a)*e})`),()=>{anim=false;upd();});
+  $('#rs').textContent=raised?'⬇ Lower periscope':'⬆ Raise periscope';redrawSide();km(raised?'🔭 The periscope is above the trench wall. Search left and right, behind the bushes!':'The periscope is lowered – you can only see sandbags.','info');}
+ const move=dx=>{if(found)return;const a=px,b=clamp(px+dx,60,580);animateVal(250,e=>{px=a+(b-a)*e;upd();});};
+ $('#sl').onclick=()=>move(-45);$('#sr').onclick=()=>move(45);$('#rs').onclick=()=>{SFX.click();setRaise(!raised);};
+ let sx;svgDrag(svg,perHit,{start:()=>{if(found)return false;sx=px;},move:dx=>{px=clamp(sx+dx,60,580);upd();}});
+ const key=e=>{if(e.key==='ArrowLeft'){move(-45);e.preventDefault();}if(e.key==='ArrowRight'){move(45);e.preventDefault();}};window.addEventListener('keydown',key);onClean(()=>window.removeEventListener('keydown',key));
+ $('#pk').onclick=()=>{peeks++;SFX.wrong();peekG.innerHTML='';T_(peekG,320,200,'🚫 Too high to see over!',{'text-anchor':'middle','font-size':30,'font-weight':900,fill:'#fff',stroke:'#7a1d1d','stroke-width':1.2});setTimeout(()=>peekG.innerHTML='',1600);
+  km('🚫 The wall is much taller than you, and light travels in <b>straight lines</b> – it cannot reach your eye over the wall. That is exactly why soldiers used periscopes!','bad');};
+ $('#lk').onclick=()=>{if(found)return;
+  if(!raised){low++;SFX.wrong();km('You can only see sandbags! 💡 <b>Raise the periscope</b> above the trench wall first.','bad');return;}
+  const cx=cxOf();
+  if(Math.abs(cx-TX)<40){found=true;const tm=(Date.now()-t0)/1000;SFX.fanfare();flash.textContent='🎯 TARGET LOCATED!';ch.querySelectorAll('*').forEach(e=>e.setAttribute('stroke','#22e07a'));
+   left.appendChild(el('div',{class:'banner',style:'top:30%'},'🎯 Target located!<small>📸 Position photographed &amp; radioed to HQ · +100 points</small>'));
+   km('✅ Light from the scout entered the top of your periscope, <b>reflected off the top mirror</b> down the tube, then <b>off the bottom mirror</b> into your eye. You saw over the wall while staying safely below it.','good');
+   speak('Target located! The periscope let you see over the trench wall by reflecting light twice.');
+   panel.querySelectorAll('.row button').forEach(b=>b.disabled=true);
+   record('SC4',wrong===0&&low===0,'Trench: locate the target with the periscope');Object.assign(lvData(),{found:true,time:Math.round(tm),wrong,low,peeks});save();
+   mcq($('#kQ'),{sc:'SC4',q:'How did the periscope let you see the scout?',hint:'Think about the two mirrors and the wall.',opts:[{t:'Light from the scout reflected off the top mirror, then the bottom mirror, into my eye – so it went over the wall',ok:1},{t:'My eye sent light out to find the scout',mis:'Thinks light travels from the eye to the object',fb:'Light travels FROM the scout INTO your eye.'},{t:'The light went through the sandbags',fb:'Sandbags block light.'},{t:'The periscope made the scout bigger',mis:'Thinks periscope mirrors make the image bigger',fb:'Plane mirrors do not make things bigger – they change the direction of light.'}]},
+    {title:'Explain it',label:'Trench: explain the periscope',onDone:()=>levelDone($('#kQ'),'Now prove what you have learnt in the exit check.')});return;}
+  wrong++;SFX.wrong();km(Math.abs(cx-RX-60)<60?'🐇 That\'s just a rabbit! Keep searching.':'Nothing in your crosshairs yet. 💡 Look for a <b>helmet</b> peeking over a bush and put it in the <b>middle</b> of the red circle.','bad');};
+ km('Press <b>⬆ Raise periscope</b> to start.','info');upd();redrawSide();}
+}
+
+/* ============ SCREEN 8: reflect ============ */
+function screenReflect(){
+ const c=el('div',{class:'card'});c.innerHTML=`<h2>Reflect: how far can I say…</h2><p class="lead">Be honest! Red = not yet, Amber = partly, Green = confident.</p><div id="rf"></div><div class="row"><button class="btn green" id="toRep" disabled>See my report card ➜</button></div>`;
+ main.appendChild(c);speak('Reflect. For each success criterion, choose red, amber or green.');
+ const rf=$('#rf');Object.keys(SCN).forEach(sc=>{const d=el('div',{},`<div><b>${SCN[sc]}</b></div>`);const r=el('div',{class:'rag'});
+  [['R','r','🔴 Not yet'],['A','a','🟠 Partly'],['G','g','🟢 Confident']].forEach(([v,cl,t])=>{const b=el('button',{class:cl},t);b.onclick=()=>{r.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');S.refl[sc]=v;save();SFX.click();$('#toRep').disabled=Object.keys(S.refl).length<4;};r.appendChild(b);});
+  d.appendChild(r);rf.appendChild(d);});
+ $('#toRep').onclick=()=>{S.end=Date.now();S.lv[8]={done:true};save();SFX.fanfare();go(9);};
+}
+
+/* ============ SCREEN 9: report ============ */
+const BANDS={above:75,inline:50};
+function band(p){return p>=BANDS.above?['above','Above expectations']:p>=BANDS.inline?['inline','In line with expectations']:['below','Below expectations'];}
+const NEXT={SC1:'Draw a ray diagram and label the incident ray, reflected ray and normal. Remember: incident goes IN to the mirror, reflected comes OFF it.',SC2:'Use a protractor to draw three rays hitting a mirror at different angles. Measure i and r from the NORMAL each time and check that i = r.',SC3:'Redo Level 4: before you move the mirror, predict where the reflected light will go using i = r.',SC4:'Draw a labelled periscope with both 45° mirrors and the light path from the object to the eye, then explain it to a partner.'};
+function screenReport(){
+ const sc={};Object.keys(SCN).forEach(k=>{const it=S.items.filter(i=>i.sc===k),c=it.filter(i=>i.correct).length;sc[k]={n:it.length,c,p:it.length?Math.round(100*c/it.length):0};});
+ const overall=Math.round(Object.values(sc).reduce((a,b)=>a+b.p,0)/4),[bc,bt]=band(overall);
+ const pre=S.pre.filter(x=>x.ok).length,ex=S.exit.filter(x=>x.ok).length,gain=ex-pre;
+ const prog=(pre===6&&ex===6)?'Secure – already knew this; ready for extension':gain>=3?'Significant progress':gain===2?'Good progress':gain===1?'Some progress':(pre>=5&&ex>=5)?'Secure – maintained a high score':'Limited progress – needs review';
+ const overconf=S.exit.filter(x=>x.conf==='sure'&&!x.ok).length,underconf=S.exit.filter(x=>x.conf!=='sure'&&x.ok).length;
+ const mins=Math.max(1,Math.round(((S.end||Date.now())-S.start)/60000));
+ const colr=p=>p>=75?'#2e7d32':p>=50?'#1565c0':'#c62828';
+ const L=S.lv,b1=L[2]||{},a4=L[5]||{},t5=L[6]||{};
+ const lvItems=i=>S.items.filter(x=>x.lv===i),lvFirst=i=>{const it=lvItems(i);return `${it.filter(x=>x.correct).length} / ${it.length}`;};
+ const rows=Object.keys(SCN).map(k=>{const r=S.refl[k],p=sc[k].p;let note='';if(r==='G'&&p<50)note='You felt confident, but your answers show this needs more work.';else if(r==='R'&&p>=75)note='You are doing better than you think!';
+  return `<tr><td><b>${SCS[k]}</b><div class="tip">${SCN[k]}</div></td><td style="min-width:120px"><div class="bar"><i style="width:${p}%;background:${colr(p)}"></i></div><b>${p}%</b> <span class="tip">(${sc[k].c}/${sc[k].n})</span> <span class="band ${band(p)[0]}">${band(p)[1]}</span></td><td><span class="pill ${r}">${r==='R'?'Red':r==='A'?'Amber':'Green'}</span><div class="tip">${note}</div></td></tr>`;}).join('');
+ const weak=Object.keys(sc).filter(k=>sc[k].p<75),strong=Object.keys(sc).filter(k=>sc[k].p>=75);
+ const mis=[...new Set(S.mis.map(x=>x.m))];
+ const nm=esc(S.name);
+ let sum=`${nm} is working <b>${bt.toLowerCase()}</b> for this topic (overall mastery ${overall}%). They scored ${pre}/6 in the pre-check and ${ex}/6 in the exit check (${gain>0?'+':''}${gain}). `;
+ sum+=b1.auto&&b1.auto.length?`They built the periscope with ${b1.auto.length} part${b1.auto.length>1?'s':''} placed for them (${b1.auto.join(', ').toLowerCase()}), placing ${b1.firstTry}/7 parts correctly first time. `:`They built the periscope independently, placing ${b1.firstTry??0}/7 parts correctly first time. `;
+ sum+=`They lit the dining table in ${a4.tableAttempts||'–'} attempt${a4.tableAttempts===1?'':'s'}, solved all three mirror-challenge stages in ${a4.tentTurns??'–'} mirror turns, and located the trench target in ${t5.time!=null?fmtT(t5.time):'–'}${t5.wrong?` after ${t5.wrong} incorrect lock-on${t5.wrong>1?'s':''}`:' with the first lock-on'}. `;
+ if(strong.length)sum+=`Strongest area: ${strong.map(k=>SCS[k].toLowerCase()).join(', ')}. `;
+ if(mis.length)sum+=`Misconception${mis.length>1?'s':''} to address: ${mis.slice(0,2).map(m=>m.charAt(0).toLowerCase()+m.slice(1)).join('; ')}. `;
+ sum+=weak.length?`Further practice is recommended for ${weak.map(k=>SCS[k].toLowerCase()).join(' and ')}.`:'All success criteria are secure – ready for an extension task.';
+ const c=el('div',{class:'card',id:'report'});
+ c.innerHTML=`<h2>📋 YEAR 6 PHYSICS – PERISCOPE MISSION REPORT</h2>
+ <div class="rhead"><span><b>Name:</b> ${nm}</span><span><b>Class:</b> ${esc(S.cls)}</span><span><b>Date:</b> ${new Date().toLocaleDateString('en-GB')}</span><span><b>Topic:</b> Reflection of Light &amp; Periscopes</span><span><b>Time taken:</b> ${mins} min</span></div>
+ <div class="kpis">
+  <div class="kpi"><div class="l">Overall attainment</div><div class="v" style="color:${colr(overall)}">${overall}%</div><span class="band ${bc}">${bt}</span></div>
+  <div class="kpi"><div class="l">Pre-check (baseline)</div><div class="v">${pre}/6</div></div>
+  <div class="kpi"><div class="l">Exit check</div><div class="v">${ex}/6</div></div>
+  <div class="kpi"><div class="l">Progress</div><div class="v" style="color:${gain>0?'#2e7d32':gain<0?'#c62828':'#1d2433'}">${gain>0?'+':''}${gain}</div><div class="l">${prog}</div></div>
+  <div class="kpi"><div class="l">Hints used</div><div class="v">${S.hints.length}</div><div class="l">fewer hints = more independent</div></div>
+ </div>
+ <h3>Mission performance</h3>
+ <table class="sc"><tr><th>Level</th><th>Score / result</th><th>Attempts</th><th>Status</th></tr>
+  <tr><td><b>Level 1 – Build the periscope</b></td><td>${b1.firstTry??0}/7 parts first time · quiz ${S.items.filter(x=>x.lv===2&&x.label.startsWith('Build quiz')&&x.correct).length}/3 first try${b1.auto&&b1.auto.length?`<div class="tip">Placed for the student: ${b1.auto.join(', ')}</div>`:''}</td><td>${b1.attempts??'–'}</td><td>✅ Complete</td></tr>
+  <tr><td><b>Level 2 – Light Journey</b></td><td>${lvFirst(3)} questions correct first try</td><td>–</td><td>✅ Complete</td></tr>
+  <tr><td><b>Level 3 – Virtual Lab</b></td><td>${lvFirst(4)} predictions / explanations correct first try</td><td>–</td><td>✅ Complete</td></tr>
+  <tr><td><b>Level 4 – Apply</b></td><td>Table lit in ${a4.tableTime!=null?fmtT(a4.tableTime):'–'} · Mirror challenge: 3/3 stages, ${a4.tentTurns??'–'} turns${a4.tent?`<div class="tip">${a4.tent.map(t=>`Stage ${t.stage}: ${t.turns} turns (fewest ${t.opt})`).join(' · ')}</div>`:''}</td><td>${a4.tableAttempts??'–'} light checks</td><td>✅ Complete</td></tr>
+  <tr><td><b>Level 5 – Trench periscope</b></td><td>Target located in ${t5.time!=null?fmtT(t5.time):'–'}${t5.low?'<div class="tip">Needed a reminder to raise the periscope</div>':''}</td><td>${(t5.wrong||0)+1} lock-on${t5.wrong?'s':''}</td><td>✅ Complete</td></tr>
+ </table>
+ <h3>Success criteria – attainment vs self-assessment</h3>
+ <table class="sc"><tr><th>Success criterion</th><th>Mastery (first try)</th><th>My rating</th></tr>${rows}</table>
+ <h3>Misconceptions to fix</h3>${mis.length?`<ul class="tight">${mis.map(m=>`<li>${m}</li>`).join('')}</ul>`:'<p>None detected – excellent! 🎉</p>'}
+ <h3>Confidence check (exit)</h3><p>Sure but wrong: <b>${overconf}</b> · Correct but unsure: <b>${underconf}</b></p>
+ <h3>Strengths</h3>${strong.length?`<ul class="tight">${strong.map(k=>`<li><b>${SCS[k]}:</b> ${SCN[k].replace('I can','Can')}</li>`).join('')}</ul>`:'<p>Keep going – every success criterion is still developing.</p>'}
+ <h3>My next steps</h3>${weak.length?`<ul class="tight">${weak.map(k=>`<li><b>${SCS[k]}:</b> ${NEXT[k]}</li>`).join('')}</ul>`:'<p>All success criteria secure. Extension: <i>Design a periscope that uses THREE mirrors to see around a corner and over a wall. Draw the light path and mark i and r at each mirror.</i></p>'}
+ <h3>Teacher summary</h3><div class="info">${sum}</div>
+ <details><summary>Question-by-question detail (for teacher)</summary><table class="sc"><tr><th>Item</th><th>SC</th><th>First try</th></tr>
+  ${S.pre.map((x,i)=>`<tr><td>Pre-check ${i+1}: ${x.q} <span class="tip">(${x.conf})</span></td><td>${x.sc}</td><td>${x.ok?'✅':'❌'}</td></tr>`).join('')}
+  ${S.items.map(x=>`<tr><td>${x.label}</td><td>${x.sc}</td><td>${x.correct?'✅':'❌'}</td></tr>`).join('')}</table></details>
+ <p class="tip">Attainment bands: ${BANDS.above}%+ Above · ${BANDS.inline}–${BANDS.above-1}% In line · below ${BANDS.inline}% Below expectations. Mastery counts first-attempt answers without hints. Progress = exit check − pre-check.</p>
+ <div class="row noprint"><button class="btn" id="pr">🖨️ Print / Save as PDF</button><button class="btn green" id="dl">⬇️ Download report</button><button class="btn light" id="again">↺ Start again</button></div>`;
+ main.appendChild(c);
+ speak(`Well done ${S.name}. Your overall attainment is ${overall} percent, ${bt}. You improved from ${pre} to ${ex} out of six.`);
+ $('#pr').onclick=()=>window.print();
+ $('#dl').onclick=()=>{const css=document.querySelector('style').textContent;const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Periscope report – ${esc(S.name)}</title><style>${css}</style></head><body><main>${c.outerHTML}</main></body></html>`;
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));a.download=`Periscope_Report_${S.cls}_${S.name}`.replace(/[^\w\-]+/g,'_')+'.html';document.body.appendChild(a);a.click();a.remove();};
+ $('#again').onclick=()=>modal('↺ Start again?','This clears this student\'s results so a new student can begin.','Start again',()=>{S=freshState();save();go(0);});
+}
+
+/* ============ boot ============ */
+const SCREENS=[screenStart,()=>screenTest('pre'),screenBuild,screenJourney,screenLab,screenApply,screenTrench,()=>screenTest('exit'),screenReflect,screenReport];
+(function boot(){const i=S.stage|0;
+ if(i>=1&&i<=8&&!(S.lv[i]&&S.lv[i].done))restartLevel(i);
+ else if(i>=1&&i<=8&&S.lv[i]&&S.lv[i].done)go(i+1);
+ else go(i>=0&&i<=9?i:0);})();
 </script>
 </body>
 </html>
